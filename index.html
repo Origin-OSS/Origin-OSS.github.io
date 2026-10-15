@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Origin // Official Website</title>
+<style>
+/* ============================================================
+   ORIGIN — Official Website
+   浅色极简科幻 · 原创设计
+   ============================================================ */
+
+:root{
+  /* ---- 原始界面色板（保留视觉语汇）----
+     奶油纸底 #f6f6f3 / 墨黑 #101110 / 信号黄 #fff500。
+     实测警告：信号黄在米色纸底上只有约 1.02:1 对比度 —— 它只能做填充配墨黑字，
+     不能当文字色。在纸底上用 #fff500 写字不是配色选择，是一次抹除。 */
+  --bg:        #f6f6f3;
+  --panel:     #f1f1ed;
+  --panel-2:   #fdfdfb;
+  --panel-3:   #ececE7;
+  --panel-4:   #f2f2ee;
+  --ink:       #101110;
+  --ink-2:     #3a3b39;
+  --ink-3:     #6b6c68;
+  --ink-4:     #9a9b96;
+  --line:      #e4e4de;
+  --line-2:    #cdcdc6;
+  --line-3:    #a8a9a3;
+  /* 信号黄：交互与强调。亮底上唯一能过 AA 的金是 #6b5d00 */
+  --signal:    #fff500;
+  --signal-2:  #e8e000;
+  --signal-dk: #6b5d00;
+  --signal-bg: rgba(255,245,0,.22);
+  --amber:     var(--signal-dk);
+  --amber-lt:  var(--signal);
+  --amber-bg:  var(--signal-bg);
+  /* 结构色：原始视觉系统不使用青蓝结构色，层级由墨与灰承担 */
+  --accent:    #101110;
+  --accent-dk: #000000;
+  --accent-bg: rgba(16,17,16,.06);
+  /* ---- 状态色 ---- */
+  --ok:        #2f7d5b;
+  --warn:      #b06a12;
+  --alert:     #c82a36;
+  --danger:    #a40000;
+  /* 字体 */
+  --disp: "Bahnschrift","DIN Alternate","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+  --sans: "Segoe UI","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;
+  --mono: ui-monospace,"Cascadia Mono",Consolas,"SFMono-Regular","Courier New",monospace;
+  /* ---- 形状：直角工业界面 ----
+     系统明文「Square, not rounded」：border-radius 0，不做切角 / 斜切 / 斜带。
+     输入框 2px 是唯一的例外。圆角卡片、阴影堆叠、玻璃拟态都是明确的 DON'T。
+     组件全部走这几个令牌，所以改这一处就能整体切换形状语言。 */
+  --r-1: 0px;
+  --r-2: 0px;
+  --r-3: 0px;
+  --r-pill: 0px;
+  --r-input: 2px;
+  /* ---- 间距：4px 栅格 ---- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+  /* ---- 动效：只有四档 ---- */
+  --dur-fast:150ms; --dur-normal:250ms; --dur-slow:400ms;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  /* 苹果官网那种收尾极缓的曲线：起步快、后半段慢慢贴合，位移越大越明显 */
+  --ease-apple:cubic-bezier(.22,1.12,.36,1);
+  /* ---- 阴影：单层，不堆叠 ---- */
+  --sh-sm:0 1px 2px rgba(19,32,41,.08);
+  --sh-md:0 4px 12px rgba(19,32,41,.10),0 1px 3px rgba(19,32,41,.06);
+  --sh-lg:0 12px 32px rgba(19,32,41,.14),0 2px 6px rgba(19,32,41,.08);
+  /* ---- 层级 ---- */
+  --z-fx:900; --z-header:1000; --z-overlay:1500; --z-modal:2000;
+  /* 字距：大写拉丁 0.08em、上标小标签 0.14em、展示字略收 -0.02em */
+  --tk-caps: .08em;
+  --tk-overline: .14em;
+  /* 布局 */
+  --rail-w: 268px;
+  --chrome-h: 58px;
+  --stat-h: 26px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;width:100%;max-width:100%;overflow:hidden}
+body{
+  margin:0;
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.7;          /* CJK 正文行高 1.7 */
+  color:var(--ink);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+button,input{font:inherit;color:inherit}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{background:none;border:0;cursor:pointer}
+ul{list-style:none;margin:0;padding:0}
+h1,h2,h3{margin:0;font-weight:600}
+
+/* 全局纹理与网格 ------------------------------------------------ */
+.app{
+  position:relative;
+  height:100vh;
+  height:100dvh;
+  max-width:100vw;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:var(--chrome-h) 1fr var(--stat-h);
+  background:
+    radial-gradient(900px 520px at 82% -14%, #ffffff 0%, rgba(255,255,255,0) 62%),
+    linear-gradient(180deg,#f2f7f9 0%, #e4ebef 100%);
+  isolation:isolate;
+}
+/* 栅格/弹性子项默认 min-width:auto，会被 nowrap 内容（跑马灯、表格）撑破视口并裁切。
+   显式归零，让内层滚动容器自己去消化溢出。 */
+.app>*{min-width:0}
+.shell>*{min-width:0}
+html.drawer-open,html.drawer-open body{overscroll-behavior:none}
+.app::before{ /* 细网格：原始界面采用「工业编辑风」，靠栅格与排版立骨架，不用晶格纹样 */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(to right, rgba(16,17,16,.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16,17,16,.022) 1px, transparent 1px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(125% 100% at 50% 0%, #000 20%, transparent 90%);
+}
+.app::after{ /* 颗粒噪点 —— 原始界面在视觉出口铺这一层，用来统一质感 */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.07;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================ 顶栏 ============================ */
+.chrome{
+  position:relative;z-index:20;min-width:0;width:100%;overflow:hidden;
+  display:flex;align-items:stretch;gap:0;
+  background:linear-gradient(180deg, rgba(251,253,254,.96), rgba(233,240,244,.92));
+  border-bottom:1px solid var(--line-2);
+  backdrop-filter:blur(8px);
+}
+.chrome::after{ /* 顶部危险条纹 */
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background-image:repeating-linear-gradient(-45deg, var(--signal) 0 5px, transparent 5px 11px);
+  opacity:.85;
+}
+.chrome::before{ /* 半调网点渐隐 —— 游戏内标题条的做法 */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(29,31,32,.14) 1px,transparent 1.3px);
+  background-size:7px 7px;
+  -webkit-mask-image:linear-gradient(100deg,#000 0%,transparent 24%);
+  mask-image:linear-gradient(100deg,#000 0%,transparent 24%);
+}
+.chrome>*{position:relative;z-index:1}
+.brand{
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;flex:0 0 auto;
+  border-right:1px solid var(--line);
+}
+.brand__mark{width:30px;height:30px;color:var(--ink);flex:0 0 auto}
+.brand__txt{display:flex;flex-direction:column;line-height:1.15}
+.brand__name{font-family:var(--disp);font-size:17px;font-weight:700;letter-spacing:.14em}
+.brand__sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
+
+.chrome__mid{
+  flex:1 1 auto;min-width:0;overflow:hidden;
+  display:flex;align-items:center;gap:26px;padding:0 22px;
+}
+.readout{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.readout__k{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--ink-3)}
+.readout__v{font-family:var(--disp);font-size:13px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.readout__v b{color:var(--amber);font-weight:600}
+
+.chrome__right{display:flex;align-items:stretch;flex:0 1 auto;min-width:0;border-left:1px solid var(--line)}
+.clock{
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-end;
+  padding:0 20px;border-right:1px solid var(--line);min-width:132px;
+}
+.clock__t{font-family:var(--mono);font-size:17px;letter-spacing:.09em;font-variant-numeric:tabular-nums}
+.clock__d{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--ink-3)}
+
+.pill{
+  display:flex;align-items:center;gap:8px;padding:0 18px;
+  border-right:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(31,138,122,.16);animation:pulse 2.4s ease-in-out infinite}
+.dot--amber{background:var(--signal);box-shadow:0 0 0 3px rgba(255,216,0,.30)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.28}}
+
+.icon-btn{
+  width:46px;height:34px;margin:auto 11px;border-radius:var(--r-2);
+  display:grid;place-items:center;color:var(--ink-2);
+  transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.icon-btn:hover{background:rgba(0,0,0,.05);color:var(--ink)}
+.icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.icon-btn svg{width:17px;height:17px}
+
+/* ============================ 侧栏 ============================ */
+.shell{position:relative;z-index:10;display:flex;min-height:0;min-width:0}
+
+.rail{
+  position:relative;flex:0 0 var(--rail-w);width:var(--rail-w);
+  display:flex;flex-direction:column;min-height:0;
+  background:linear-gradient(180deg, rgba(251,253,254,.72), rgba(240,246,249,.62));
+  border-right:1px solid var(--line-2);
+  transition:width var(--dur-normal) var(--ease), flex-basis var(--dur-normal) var(--ease);
+}
+.rail__head{
+  padding:16px 20px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.rail__title{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:var(--ink-3);text-transform:uppercase}
+.rail__scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:10px 0 18px}
+.rail__scroll::-webkit-scrollbar{width:8px}
+.rail__scroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:var(--r-pill)}
+.rail__scroll::-webkit-scrollbar-track{background:transparent}
+
+/* 搜索 */
+.search{padding:12px 18px 4px}
+/* 搜索框走「下划线输入」而不是套一个框 —— 编辑式排版里的常规做法，
+   也让侧栏少一个矩形 */
+.search__box{
+  display:flex;align-items:center;gap:8px;
+  border:0;border-bottom:1px solid var(--line-3);background:none;
+  padding:0 2px 8px;height:auto;border-radius:0;
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.search__box:focus-within{border-bottom-color:var(--ink)}
+.search__box svg{width:13px;height:13px;color:var(--ink-3);flex:0 0 auto}
+.search__box input{
+  border:0;background:none;outline:none;width:100%;font-size:12.5px;
+  font-family:var(--sans);
+}
+.search__box input::placeholder{color:var(--ink-4)}
+.search__hint{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-4);padding:6px 19px 0}
+
+/* 一级 + 二级菜单：整宽直角块，状态靠左侧 4px 色条表达（系统里的标准手法）。
+   这里只有一根 border，不与其他宽度拼接，所以不会斜接出小斜边。 */
+.nav{padding:var(--sp-1) 0 0}
+.nav__group{position:relative;margin:0}
+.nav__btn{
+  position:relative;width:100%;
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4);text-align:left;border-radius:0;
+  border-left:4px solid transparent;
+  transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+/* 悬停反色：从左往右铺过去，而不是整块瞬间变黄。
+   铺色层用 scaleX(0→1)、transform-origin 在左 ——
+   进场从左边展开，移开时再原路收回。文字靠 z-index 压在铺色层之上。
+   只用 ::before 一个伪元素，不额外加 DOM。
+
+   触发条件只留 :hover。这里不能接 :focus-visible ——
+   点一级菜单展开分组后焦点会留在按钮上，一旦它匹配，黄色就一直亮着，
+   鼠标移开也不退，表现成「卡在黄色」。键盘可达性由下面的 outline 负责。 */
+.nav__btn::before,.sub__item::before{
+  content:"";position:absolute;left:0;top:0;right:0;bottom:0;
+  background:var(--signal);
+  transform:scaleX(0);transform-origin:left center;
+  transition:transform 420ms var(--ease);
+}
+.nav__btn:hover::before,.sub__item:hover::before{transform:scaleX(1)}
+.nav__btn>*,.sub__item>*{position:relative;z-index:1}
+.nav__btn:hover{color:var(--ink)}
+.nav__btn:hover .nav__code,.nav__btn:hover .nav__chev{color:var(--ink)}
+.nav__btn:hover .nav__en{color:var(--ink-2)}
+.nav__btn:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.nav__code{
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--ink-4);
+  flex:0 0 auto;width:22px;transition:color var(--dur-fast) var(--ease);
+}
+.nav__label{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.nav__cn{font-size:13.5px;font-weight:500;letter-spacing:var(--tk-caps)}
+.nav__en{font-family:var(--mono);font-size:9px;letter-spacing:var(--tk-overline);color:var(--ink-4);text-transform:uppercase}
+.nav__chev{width:11px;height:11px;color:var(--ink-4);flex:0 0 auto;transition:transform var(--dur-normal) var(--ease)}
+
+.nav__group.is-open>.nav__btn{background:var(--panel-3);border-left-color:var(--ink)}
+.nav__group.is-open>.nav__btn .nav__chev{transform:rotate(90deg)}
+.nav__group.has-active>.nav__btn{border-left-color:var(--signal)}
+.nav__group.has-active>.nav__btn .nav__code{color:var(--signal-dk)}
+.nav__group.has-active>.nav__btn .nav__cn{font-weight:600}
+
+/* 二级菜单本体 */
+.nav__sub{
+  overflow:hidden;max-height:0;
+  transition:max-height var(--dur-slow) var(--ease);
+}
+.nav__group.is-open>.nav__sub{max-height:280px}
+.sub__item{
+  position:relative;width:100%;
+  display:flex;align-items:center;gap:var(--sp-3);border-radius:0;
+  padding:var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-8);
+  border-left:4px solid transparent;
+  text-align:left;font-size:12.5px;color:var(--ink-2);
+  transition:color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.sub__item:hover{color:var(--ink)}
+.sub__item:hover .sub__idx{color:var(--ink-2)}
+.sub__item:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.sub__item.is-active{color:var(--ink);font-weight:600;background:var(--signal);border-left-color:var(--ink)}
+.sub__idx{
+  margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-4);
+}
+.sub__item.is-active .sub__idx{color:var(--ink-2)}
+
+/* ============ 菜单进入动效 ============
+   沿用原始启动动画语言：左边缘一条信号黄轨自上而下填充，
+   读数跟随填充端一起下移。这里把它用在导航上 ——
+   黄轨扫过，菜单项依次就位。 */
+.rail__scroll{position:relative}
+.rail__scroll::before{
+  content:"";position:absolute;left:0;top:0;width:4px;height:0;
+  background:var(--signal);pointer-events:none;z-index:3;
+}
+.rail.is-nav-in .rail__scroll::before{
+  animation:railFill .82s cubic-bezier(.33,1,.68,1) both;
+}
+@keyframes railFill{from{height:0}to{height:100%}}
+
+.rail.is-nav-in .nav__group{
+  animation:navItemIn var(--dur-slow) var(--ease) both;
+  animation-delay:calc(var(--i,0) * 70ms + 60ms);   /* 跟着黄轨的填充端走 */
+}
+@keyframes navItemIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+/* 二级菜单展开：逐项从左落位，色条同时长出来 */
+.nav__group.is-open .sub__item{
+  animation:subItemIn var(--dur-normal) var(--ease) both;
+  animation-delay:calc(var(--j,0) * 45ms);
+}
+@keyframes subItemIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+.rail__foot{
+  border-top:1px solid var(--line);padding:12px 20px;flex:0 0 auto;
+  display:flex;flex-direction:column;gap:7px;
+}
+.meter{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-3)}
+.meter__bar{flex:1 1 auto;height:4px;background:var(--line);border-radius:var(--r-pill);overflow:hidden}
+.meter__fill{height:100%;background:var(--ink-2);width:0;border-radius:0;transition:width var(--dur-slow) var(--ease)}
+.meter__fill--amber{background:var(--signal)}
+
+/* 折叠态：窄条 + 二级菜单浮出（仅桌面宽度生效） */
+@media (min-width:901px){
+  /* z-index 必须给在 .rail 上，而不是只给浮层：
+     浮层虽然写了 z-index:60，实测仍被舞台内容整块压住
+     （elementFromPoint 三个探测点全部命中 .stage__body）。
+     给 .rail 一个层叠层级后，整条侧栏连同浮层确定性地压在舞台之上。
+     写在媒体查询内，避免把移动端抽屉的 z-index:50 顶掉。 */
+  .rail.is-collapsed{--rail-w:66px;z-index:40}
+  .rail.is-collapsed .rail__head,
+  .rail.is-collapsed .rail__title,
+  .rail.is-collapsed .search,
+  .rail.is-collapsed .nav__label,
+  .rail.is-collapsed .nav__chev,
+  .rail.is-collapsed .rail__foot{display:none}
+  .rail.is-collapsed .rail__scroll{overflow:visible}
+  .rail.is-collapsed .nav__btn{justify-content:center;padding:12px 0}
+  .rail.is-collapsed .nav__code{width:auto;font-size:12px}
+  .rail.is-collapsed .nav__group.is-open>.nav__sub{max-height:0;border-bottom-color:transparent}
+  .rail.is-collapsed .nav__sub{
+    position:absolute;left:100%;top:0;z-index:60;width:196px;max-height:none;
+    background:var(--panel-2);border:1px solid var(--line-2);border-left:3px solid var(--ink);
+    box-shadow:0 18px 40px -18px rgba(20,24,26,.42);
+    display:none;
+  }
+  /* 悬停/聚焦时浮出，并解除 is-open 留下的 max-height:0 */
+  .rail.is-collapsed .nav__group:hover .nav__sub,
+  .rail.is-collapsed .nav__group:focus-within .nav__sub{display:block;max-height:none}
+  .rail.is-collapsed .sub__item{padding-left:var(--sp-4)}
+}
+
+/* ============================ 主台 ============================ */
+.stage{position:relative;flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:0}
+/* 暗角（vignette / 热点效应）：四周压暗、把注意力收到画面中心。 */
+.stage::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:7;
+  box-shadow:inset 0 0 120px -34px rgba(19,32,41,.24);
+}
+/* 扫描线：铺在内容之上，极淡 */
+.stage::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.5;
+  background-image:repeating-linear-gradient(0deg,rgba(19,32,41,.032) 0 1px,transparent 1px 4px);
+}
+/* 实验室扫描：11 秒扫过一遍的横向光带 */
+.lab-scan{
+  position:absolute;left:0;right:0;top:0;height:220px;pointer-events:none;z-index:6;
+  background:linear-gradient(180deg,transparent,rgba(23,121,164,.08) 44%,
+    rgba(23,121,164,.17) 50%,rgba(23,121,164,.08) 56%,transparent);
+  animation:labScan 11s linear infinite;
+}
+/* 开机时的一次性快扫 */
+.lab-scan.is-boot{animation:labScan 1.7s cubic-bezier(.4,0,.2,1) 1 both}
+@keyframes labScan{
+  0%{transform:translateY(-240px)}
+  100%{transform:translateY(115vh)}
+}
+.stage__head{
+  position:relative;z-index:9;
+  flex:0 0 auto;display:flex;align-items:center;gap:16px;
+  padding:14px 30px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0));
+}
+.crumb{display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase}
+.crumb>span,.crumb>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crumb b{color:var(--ink);font-weight:600}
+.crumb__sep{width:16px;height:1px;background:var(--line-3)}
+.stage__head .spacer{flex:1 1 auto}
+.tagline{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-4)}
+
+.stage__body{
+  position:relative;z-index:1;
+  flex:1 1 auto;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;
+  padding:26px 30px 34px;
+  display:grid;grid-template-columns:minmax(0,1fr) 306px;gap:22px;align-content:start;
+}
+.stage__body>.col{position:relative;z-index:1}
+/* 换页时新内容先在这种状态下落地：保持终态、且不参与过渡。
+   不加这一层的话，元素生成时计算值就是终态，.rv 一挂上去，
+   520ms/780ms 那条过渡会朝"隐藏"方向跑一趟（fill:backwards，还有 120ms 延迟），
+   于是面板在编排接手前先自己往下滑 48px 再被拉回来 —— 切页时那一下竖向抽搐。
+   render() 在换 DOM 前加上，addDynamic() 之后立刻摘掉。 */
+.pre-rv,.pre-rv .rv,.pre-rv .rv--fade{
+  opacity:1!important;transform:none!important;
+  transition:none!important;clip-path:none!important
+}
+
+/* 切页转场：信号黄从左侧横向铺满内容区，盖住旧内容 → 换 DOM → 向右退出。
+   时长和拐点是配着 select() 里的时刻算的：
+     0–246ms   铺满（30%）
+     30–36%    满宽保持（246–295ms）—— 换 DOM 和网点闪烁都在这一段里做完
+     36–74%    向右退净（295–607ms）
+   揭示卡在 300ms 起跑，也就是黄块刚开始退场的当刻：
+   早了动画在遮罩底下跑完，晚了会露出空白帧，只有卡在这一刻两头都不占。 */
+.wipe{
+  position:absolute;inset:0;pointer-events:none;z-index:7;
+  background:var(--signal);transform:scaleX(0);transform-origin:left center;
+}
+.wipe.is-on{animation:txSweep 820ms cubic-bezier(.45,.05,.25,1) both}
+@keyframes txSweep{
+  0%{transform:scaleX(0);transform-origin:left center}
+  30%{transform:scaleX(1);transform-origin:left center}
+  36%{transform:scaleX(1);transform-origin:right center}
+  74%{transform:scaleX(0);transform-origin:right center}
+  100%{transform:scaleX(0);transform-origin:right center}
+}
+
+/* 换页时的局部马赛克化 —— 局部失真式同步效果。
+   只在满宽保持的那 49ms 里起手、150ms 收完，所以本体全在黄块底下；
+   露出来的尾巴正赶上内容落位，读作「画面在解析」，而不是闪一下。 */
+@keyframes glitchMosaic{
+  0%{opacity:0;transform:translate(-8px,0)}
+  30%{opacity:1;transform:translate(6px,-2px)}
+  60%{opacity:.5;transform:translate(-3px,1px)}
+  100%{opacity:0;transform:none}
+}
+.stage__body.is-glitching::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+  background-image:repeating-conic-gradient(rgba(16,17,16,.16) 0% 25%, transparent 0% 50%);
+  background-size:13px 13px;
+  animation:glitchMosaic 150ms steps(3) both;
+}
+/* ============================ 等高线地图 ============================ */
+/* 一组同心的不规则闭合曲线读起来就是地形。环与环共用同一组相位、
+   只有幅度逐层递减，所以看起来是一层层往上收的山体，
+   而不是各画各的噪点 —— 这是它像等高线、而不是像随机曲线的原因。 */
+.map{position:relative;padding:0 var(--sp-4) var(--sp-4)}
+.map svg{display:block;width:100%;height:auto;overflow:visible}
+.map__grid{stroke:rgba(16,17,16,.06);stroke-width:.7}
+.map .ctr{fill:none;stroke:rgba(16,17,16,.20);stroke-width:.9;vector-effect:non-scaling-stroke}
+.map .ctr--hi{stroke:rgba(16,17,16,.34)}
+.map .ctr--summit{stroke:rgba(16,17,16,.5);stroke-width:1.2}
+.map__blk{fill:rgba(16,17,16,.035);stroke:rgba(16,17,16,.16);stroke-width:.8}
+.map__route{fill:none;stroke:var(--signal-dk);stroke-width:1.8;stroke-dasharray:6 5}
+.map__node{fill:var(--ink)}
+.map__node--core{fill:var(--signal);stroke:var(--ink);stroke-width:1.2}
+.map__lbl{font-family:var(--mono);font-size:9.5px;fill:var(--ink);letter-spacing:.06em}
+.map__zlb{font-family:var(--mono);font-size:9px;fill:var(--ink-3);letter-spacing:.14em}
+.map__tag{font-family:var(--mono);font-size:9px;fill:var(--signal-dk)}
+.map__legend{display:flex;gap:var(--sp-5);flex-wrap:wrap;margin-top:var(--sp-3);
+  font-family:var(--mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.1em}
+.map__legend i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
+.map__legend i.c{background:var(--signal);border:1px solid var(--ink)}
+.map__legend i.n{background:var(--ink)}
+.map__legend i.r{background:repeating-linear-gradient(90deg,var(--signal-dk) 0 3px,transparent 3px 6px);height:2px;vertical-align:3px}
+.map__legend i.g{border:1px solid rgba(16,17,16,.4)}
+/* 地图页：地图面板占主位。开启时收掉三块次要面板，
+   版面由「八块并列」变成「地图 + 关键指标」，地图才真的突出。
+   关掉开关即恢复完整排布 —— 这也是开关存在的意义。 */
+body.map-focus .panel--sec{display:none}
+/* 关键：地图页把两栏并成一栏，右栏移到下方。
+   地图宽度从「内容区 − 306 − 22」变成整个内容区，
+   按 760:340 的比例，高度从约 333px 涨到约 480px ——
+   加大是版面让出来的，不是把 SVG 拉变形。
+   开/关一眼可见，而不是只收起首屏之下的三块面板。 */
+body.map-focus .stage__body{grid-template-columns:minmax(0,1fr)}
+/* 右栏落到下方后铺成多列，避免单列拉得过宽 */
+body.map-focus #colSide{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));
+  gap:18px;align-items:start;
+}
+body.map-focus .panel--map{padding-bottom:var(--sp-2)}
+body.map-focus .panel--map .map svg{min-height:clamp(300px,46vh,540px)}
+
+/* 开关：放在地图下方，控件本身就是它控制的对象 */
+.maptog{
+  display:flex;align-items:center;gap:9px;margin-top:var(--sp-4);
+  padding:9px var(--sp-4);width:100%;
+  border:0;border-top:1px solid var(--line-1);background:none;cursor:pointer;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-3);
+  transition:background 180ms var(--ease),color 180ms var(--ease);
+}
+.maptog:hover{background:var(--panel-3);color:var(--ink)}
+.maptog i{display:block;width:24px;height:13px;border:1px solid var(--line-2);position:relative;flex:0 0 auto}
+.maptog i::after{
+  content:"";position:absolute;top:1px;left:1px;width:9px;height:9px;background:var(--ink);
+  transition:transform 220ms var(--ease),background 220ms var(--ease);
+}
+.maptog[aria-pressed="true"] i::after{transform:translateX(11px);background:var(--signal)}
+.maptog b{margin-left:auto;font-weight:600;color:var(--ink);letter-spacing:.1em}
+
+
+
+.stage__body::-webkit-scrollbar{width:10px}
+.stage__body::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:var(--r-pill);border:3px solid transparent;background-clip:padding-box}
+.stage__body::-webkit-scrollbar-thumb:hover{background:var(--line-3);background-clip:padding-box}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+/* ============================ 面板 ============================ */
+/* 面板不画外框 —— 方框用来表示「状态」，不用来表示「结构」。
+   顶部那根 3px 分节线是一条「轨」：揭示时从左向右画出，再让内容落位。
+   与启动页的黄轨填充是同一套语言。 */
+.panel{
+  position:relative;background:var(--panel-2);
+  border:0;border-radius:0;overflow:hidden;
+  /* 性能：每块面板自成布局 / 绘制孤岛。
+     13 块面板同时动画时，浏览器不必为了一块的属性变化去结算整棵子树。
+     纯开销优化，不改任何视觉 —— 面板本来就 overflow:hidden，
+     contain:paint 的裁剪范围与现状一致。 */
+  contain:layout paint style;
+}
+.panel::before{
+  content:"";position:absolute;left:0;top:0;height:3px;width:100%;z-index:2;
+  background:var(--ink);transform:scaleX(1);transform-origin:left center;
+  transition:transform 560ms var(--ease-apple);
+}
+/* 有 .rv 但还没 .in 时轨是空的；加回 .in 就画出来。
+   静态模式下根本没有 .rv，轨保持满格 —— 不会因为不动效而丢结构。 */
+.rv:not(.in)::before{transform:scaleX(0)}
+.panel--cut{border-radius:0}
+.panel--cut-sm{border-radius:0}
+/* 角标括号只用于图片（系统规定），面板上不出现 —— 已从 hero 移除 */
+
+.panel__head{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 20px 13px 16px;border-bottom:1px solid var(--line);
+  border-left:4px solid var(--signal);      /* 左侧色条 —— 系统里最常见的强调 */
+}
+/* 次级面板不加色条，避免整页到处是黄块 */
+.panel--plain .panel__head{border-left-color:transparent}
+.panel__head h3{font-family:var(--disp);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
+.panel__head .spacer{flex:1 1 auto}
+.panel__code{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--ink-4)}
+.panel__body{padding:20px}
+
+/* ============================ 主视觉 ============================ */
+.hero{position:relative;overflow:hidden;background:linear-gradient(115deg,#fbfdfe 0%,#f1f7fa 58%,#e7eff4 100%)}
+.hero__grid{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;align-items:center;padding:30px 30px 28px}
+.hero__eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hero__eyebrow span{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;color:var(--amber)}
+.hero__eyebrow i{flex:0 0 34px;height:1px;background:var(--amber);opacity:.6}
+.hero h1{
+  font-family:var(--disp);font-size:clamp(26px,3.4vw,40px);line-height:1.06;
+  letter-spacing:.03em;font-weight:600;
+}
+.hero h1 em{font-style:normal;color:var(--ink-3);display:block;font-size:.42em;letter-spacing:.3em;margin-top:10px}
+.hero p{max-width:56ch;margin:16px 0 0;color:var(--ink-2);font-size:13.5px;line-height:1.75}
+.hero__tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
+/* 芯片：只有主动作做成实心信号黄块，其余是「方块 + 文字」的纯文本态。
+   全部套框的话，一排芯片就变成一排方框。 */
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  padding:0;border:0;background:none;color:var(--ink-2);
+}
+.chip::before{content:"";width:7px;height:7px;background:var(--line-3);flex:0 0 auto}
+.chip--amber{
+  padding:5px 11px;background:var(--signal);color:var(--ink);font-weight:600;
+}
+.chip--amber::before{display:none}
+.dial{position:relative;display:grid;place-items:center}
+.dial svg{width:100%;height:auto;max-width:230px;color:var(--ink)}
+.dial__spin{transform-origin:50% 50%;animation:spin 26s linear infinite}
+.dial__spin-rev{transform-origin:50% 50%;animation:spin 40s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 主视觉扫描线 */
+/* 主视觉的黄色光影：横向位置由鼠标驱动，不再自己定时扫过去。
+   默认藏在面板左侧之外且透明，鼠标进入才亮起。
+   140ms 的位移过渡让它略带延迟，读起来像一束光被「拖」着走。 */
+/* 面板黄色光影：所有面板通用，位置由鼠标驱动。
+   横向跟指针 X，纵向跟指针 Y —— 所以是斜着走的。
+   光带本身 skewX 成斜的，并且上下各超出面板 30%，
+   这样纵向平移时不会在上下缘露出缺口。 */
+.scan{
+  position:absolute;top:-30%;bottom:-30%;left:0;z-index:1;pointer-events:none;
+  /* 宽度随面板自适应：宽面板 180px 封顶，窄面板按 32% 收窄，
+     否则 180px 的光带在侧栏那种小面板里会显得过大。 */
+  width:min(180px,32%);
+  background:linear-gradient(90deg,transparent,rgba(255,216,0,.34),transparent);
+  transform:translate(-100%,0) skewX(-14deg);   /* 用自身百分比待命，与宽度无关 */
+  opacity:0;
+  transition:transform 140ms linear,opacity 300ms var(--ease);
+}
+.panel:hover .scan{opacity:1}
+
+/* ============================ 指标 ============================ */
+/* 不画格子。数字对齐成列，靠顶部横线与行间留白分隔 —— 编辑式排版，
+   而不是把每个读数关进一个小方框。 */
+.statgrid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:0;
+  background:var(--panel-2);border:0;border-top:3px solid var(--ink);
+}
+.stat{
+  position:relative;background:var(--panel-2);padding:var(--sp-5) var(--sp-4) var(--sp-4);
+  overflow:hidden;--rv-r:0px;
+  transition:background var(--dur-fast) var(--ease);
+}
+.stat:hover{background:var(--panel-3)}
+/* 悬停时顶部才长出色条：状态指示，不是结构装饰。
+   .stat 有 overflow:hidden，所以色条从 0 起算而不是负偏移 */
+.stat::before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;background:var(--signal);transform:scaleX(0);transform-origin:left;transition:transform var(--dur-normal) var(--ease)}
+.stat:hover::before{transform:scaleX(1)}
+.stat__k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--ink-3);text-transform:uppercase;display:block;margin-bottom:9px}
+.stat__v{font-family:var(--disp);font-size:27px;line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:5px}
+.stat__u{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.08em}
+.stat__d{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;margin-top:8px;display:flex;align-items:center;gap:5px;color:var(--ink-3)}
+.stat__d.up{color:var(--ok)}
+.stat__d.down{color:var(--alert)}
+
+/* ============================ 图表 ============================ */
+.chart{width:100%;height:auto;display:block}
+.chart .grid-l{stroke:var(--line);stroke-width:1;shape-rendering:crispEdges}
+.chart .axis{font-family:var(--mono);font-size:9px;fill:var(--ink-4);letter-spacing:.1em}
+.chart .ln{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.chart .ln-amber{stroke:var(--signal-dk);stroke-width:1.3;stroke-dasharray:4 4}
+.chart .pt{fill:var(--panel-2);stroke:var(--ink);stroke-width:1.4}
+.chart .pt--hi{fill:var(--signal);stroke:var(--signal-dk)}
+/* 曲线铺开改用 clip 揭示，而不是 dashoffset。
+   dashoffset 要靠 stroke-dasharray 才能工作，而「上一周期」那条虚线本身带 4 4 点划，
+   且 .chart .ln-amber 特指度高于 .draw —— 虚线的 dasharray 压掉了描线用的那组，
+   所以那条线从来没参与过描线，一直是一次性出现。
+   clip 从左往右揭开与线型无关，实线虚线都适用，也不破坏点划样式。 */
+.draw{clip-path:inset(0 100% 0 0);animation:drawWipe 1.5s cubic-bezier(.35,0,.2,1) forwards}
+@keyframes drawWipe{to{clip-path:inset(0 0 0 0)}}
+
+.legend{display:flex;gap:18px;flex-wrap:wrap;padding:0 20px 16px}
+.legend span{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
+.legend i{width:14px;height:2px;background:var(--ink)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--signal-dk) 0 4px,transparent 4px 8px)}
+
+/* ============================ 表格 ============================ */
+.tblwrap{overflow-x:auto}
+.tblwrap::-webkit-scrollbar{height:7px}
+.tblwrap::-webkit-scrollbar-thumb{background:var(--line-2)}
+.tbl{width:100%;min-width:430px;border-collapse:collapse}
+/* 表头只用一条 2px 墨线收口，不填底色、不画格 —— 表格靠行距和竖列对齐就读得懂 */
+.tbl th{
+  font-family:var(--mono);font-size:9px;letter-spacing:var(--tk-overline);color:var(--ink-3);
+  text-transform:uppercase;text-align:left;font-weight:400;
+  padding:0 16px 10px;border-bottom:2px solid var(--ink);background:none;
+}
+.tbl td{padding:11px 16px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+.tbl tbody tr{transition:background var(--dur-fast) var(--ease)}
+.tbl tbody tr:hover{background:rgba(0,0,0,.045)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl td:first-child{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-3);white-space:nowrap}
+.tbl td strong{color:var(--ink);font-weight:600}
+/* 等级用「方块指示条 + 文字」，不套标签框 —— 原始界面里的标准做法。
+   方框留给需要真正被强调的东西，不是每个状态都配一个框。 */
+.lvl{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+  padding:0;border:0;background:none;white-space:nowrap;color:var(--ink-2);
+}
+.lvl::before{content:"";width:7px;height:7px;background:currentColor;flex:0 0 auto}
+.lvl--ok{color:var(--ok)}
+.lvl--amb{color:var(--amber)}
+.lvl--alr{color:var(--alert)}
+.lvl--mut{color:var(--ink-4)}
+
+/* ============================ 资源占用条 ============================ */
+.bar{display:flex;align-items:center;gap:12px;padding:7px 0}
+.bar__k{flex:0 0 92px;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.bar__track{flex:1 1 auto;min-width:40px;height:6px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+/* 三级色阶：常态走中性灰、偏高用信号黄、接近上限才用红。
+   中性档用纯墨会重得像告警，整条色阶就读不出层次了。 */
+.bar__fill{display:block;height:100%;width:0;border-radius:0;background:var(--ink-4);transition:width var(--dur-slow) var(--ease)}
+.bar--amb .bar__fill{background:var(--signal)}
+.bar--alr .bar__fill{background:var(--alert)}
+.bar__v{flex:0 0 56px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ============================ 节点矩阵 ============================ */
+/* 矩阵格不描边：填色本身就是状态，加边框只会让 54 个格子变成 54 个方框 */
+.mx{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:4px}
+.mx__c{aspect-ratio:1;border-radius:0;background:var(--panel-3);border:0}
+.mx__c.is-dim{background:var(--line)}
+.mx__c.is-amb{background:var(--signal)}
+.mx__c.is-alr{background:var(--alert)}
+.mx__legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
+.mx__legend i{width:10px;height:10px;border-radius:0;display:inline-block;margin-right:7px;vertical-align:-1px}
+
+/* ============================ 侧栏卡片 ============================ */
+.side-card .panel__body{padding:18px 20px}
+.gauge{display:grid;place-items:center;position:relative;padding:4px 0 10px}
+.gauge svg{width:150px;height:150px}
+.gauge__track{fill:none;stroke:var(--line);stroke-width:6}
+.gauge__val{fill:none;stroke:var(--signal);stroke-width:6;stroke-linecap:butt;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset var(--dur-slow) var(--ease)}
+.gauge__num{position:absolute;top:50%;left:50%;transform:translate(-50%,-58%);text-align:center}
+.gauge__num b{font-family:var(--disp);font-size:32px;display:block;line-height:1;font-variant-numeric:tabular-nums}
+.gauge__num span{font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;color:var(--ink-3)}
+
+.slist{display:flex;flex-direction:column}
+.slist__row{
+  display:flex;align-items:center;gap:11px;padding:10px 0;
+  border-bottom:1px dashed var(--line);font-size:12.5px;
+}
+.slist__row:last-child{border-bottom:0}
+.slist__bar{flex:0 0 4px;height:22px;border-radius:var(--r-pill);background:var(--line-2)}
+.slist__bar--amb{background:var(--signal)}
+.slist__bar--alr{background:var(--alert)}
+.slist__t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.slist__v{font-family:var(--mono);font-size:10.5px;color:var(--ink);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--ink-3)}
+.kv b{color:var(--ink);font-weight:600}
+
+/* 滚动条信息条 */
+.ticker{
+  flex:0 0 auto;display:flex;align-items:center;gap:0;min-width:0;
+  border-top:1px solid var(--line-2);height:32px;overflow:hidden;background:rgba(251,253,254,.62);
+}
+.ticker__tag{
+  flex:0 0 auto;height:100%;display:flex;align-items:center;padding:0 16px;
+  border-radius:0 var(--r-pill) var(--r-pill) 0;
+  background:var(--ink);color:#fff;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;
+  /* 必须抬到轨道之上：两者都没定位时按 DOM 顺序绘制，轨道在后会画在标签上面。
+       而 marquee 把轨道左移最多自身宽度的一半，文字会滑出盒子直接压到 LIVE FEED 上 ——
+       .ticker 的 overflow:hidden 只在最左边缘裁切，管不到标签所在的这一段。 */
+  position:relative;z-index:2;
+}
+.ticker__track{flex:1 1 auto;min-width:0;display:flex;gap:44px;white-space:nowrap;animation:marquee 44s linear infinite;padding-left:26px}
+.ticker__track span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-2)}
+.ticker__track b{color:var(--amber);font-weight:400}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ============================ 底栏 ============================ */
+.statusbar{
+  position:relative;z-index:20;display:flex;align-items:center;gap:0;
+  border-top:1px solid var(--line-2);background:rgba(251,253,254,.74);
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--ink-3);
+}
+.statusbar>div{padding:0 14px;border-right:1px solid var(--line);height:100%;display:flex;align-items:center;gap:7px}
+.statusbar .spacer{flex:1 1 auto;border:0}
+
+/* 音频开关：播放时显示声波，静音时显示叉 */
+
+
+/* 开场免责声明：固定在启动视觉顶部，不参与主品牌层级 */
+.intro-notice{
+  position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:6;
+  width:min(92vw,900px);text-align:center;pointer-events:none;
+  font-family:var(--sans);font-size:11px;line-height:1.6;letter-spacing:.08em;
+  color:rgba(255,245,0,.58);
+}
+@media(max-width:720px){
+  .intro-notice{top:18px;width:88vw;font-size:10px;letter-spacing:.05em}
+}
+
+/* ============================ 点按进入 ============================
+   进入游戏那一下「点按开始」。配色 / 字体 / 字号阶梯全部沿用启动页，
+   只把版心改成：字标居中、提示落底。 */
+.tap{
+  position:fixed;inset:0;z-index:calc(var(--z-modal) + 100);
+  background:var(--ink);color:var(--signal);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;overflow:hidden;user-select:none;
+  transition:opacity 620ms var(--ease),visibility 620ms;
+}
+.tap.is-done{opacity:0;visibility:hidden}
+/* 字标：与启动页同一套（END / FIELD 紧排堆叠、行高 .8、左侧留白对齐） */
+.tap__brand{display:flex;flex-direction:column;align-items:flex-start;position:relative}
+.tap__kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;margin-bottom:15px;opacity:.85}
+.tap__word{
+  font-family:var(--disp);font-weight:700;
+  font-size:clamp(30px,min(9vh,8vw),96px);
+  line-height:.8;letter-spacing:-.02em;margin-left:-.055em;
+}
+.tap__marks{display:flex;gap:5px;margin-top:24px}
+.tap__marks i{width:9px;height:9px;background:var(--signal);animation:tapMark 2.4s var(--ease) infinite}
+.tap__marks i:nth-child(2){animation-delay:.16s}
+.tap__marks i:nth-child(3){animation-delay:.32s}
+@keyframes tapMark{0%,60%,100%{opacity:1}30%{opacity:.25}}
+.tap__desc{font-size:12px;letter-spacing:.14em;color:var(--panel-2);margin:18px 0 0;opacity:.7}
+
+/* 底部提示：一个呼吸的方块 + 中英双行，节奏与内部的小标签一致 */
+.tap__hint{
+  position:absolute;left:0;right:0;bottom:11vh;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  animation:tapBreath 2.4s var(--ease) infinite;
+}
+@keyframes tapBreath{0%,100%{opacity:.42}50%{opacity:1}}
+.tap__pulse{
+  width:38px;height:38px;display:grid;place-items:center;
+  border:1px solid rgba(255,245,0,.35);position:relative;
+}
+.tap__pulse i{width:12px;height:12px;background:var(--signal);display:block}
+.tap__pulse::after{
+  content:"";position:absolute;inset:-1px;border:1px solid var(--signal);
+  animation:tapRing 2.4s var(--ease) infinite;
+}
+@keyframes tapRing{0%{transform:scale(1);opacity:.9}70%,100%{transform:scale(1.7);opacity:0}}
+.tap__cn{font-family:var(--sans);font-size:13px;letter-spacing:.34em;text-indent:.34em}
+.tap__en{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;opacity:.6}
+.tap__tag{
+  position:absolute;left:0;right:0;bottom:26px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;opacity:.32;
+}
+/* 减弱动效：去掉呼吸与扩散，只留静态提示 */
+.is-still .tap__hint,.is-still .tap__marks i,.is-still .tap__pulse::after{animation:none}
+.is-still .tap__hint{opacity:1}
+
+/* ============================ 启动序列 ============================
+   沿用原始主视觉的三段式：
+   1) 左边缘 10px 信号黄轨自上而下填充，刻度 / 百分比 / 状态行跟随填充端下移；
+   2) 到顶后黄轨横向铺满整屏（520ms）；
+   3) 整屏淡出（620ms）。
+   海报排版：ORIGIN / OSS 上下紧排堆叠（行高 .80），品牌块内部左对齐、整体靠右。 */
+.boot{
+  position:fixed;inset:0;z-index:var(--z-modal);
+  background:var(--ink);overflow:hidden;
+  transition:opacity 620ms var(--ease),visibility 620ms;
+}
+.boot.is-done{opacity:0;visibility:hidden}
+/* 左边缘黄轨 */
+.boot__rail{position:absolute;left:0;top:0;width:10px;height:0;background:var(--signal);z-index:2}
+/* 到顶后横向铺满 */
+.boot__flood{
+  position:absolute;inset:0;background:var(--signal);z-index:3;
+  transform:scaleX(0);transform-origin:left center;
+}
+/* 跟随填充端下移的读数：贴在黄条前端下方，接近底部时钳制住不出屏 */
+.boot__read{
+  position:absolute;left:26px;z-index:4;display:flex;align-items:baseline;gap:10px;
+  font-family:var(--mono);color:var(--signal);white-space:nowrap;
+}
+.boot__read b{font-family:var(--disp);font-size:32px;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.boot__read span{font-size:11px;letter-spacing:.16em;opacity:.7}
+.boot__read em{font-style:normal;font-size:10px;letter-spacing:.2em;opacity:.55}
+/* 沿黄轨排布的刻度 */
+.boot__ticks{position:absolute;left:10px;top:0;bottom:0;width:15px;z-index:2}
+.boot__ticks i{position:absolute;left:0;height:1px;background:rgba(255,245,0,.26)}
+.boot__ticks i.major{width:15px;background:rgba(255,245,0,.62)}
+.boot__ticks i.minor{width:7px}
+/* 海报式品牌块：内部左对齐，整体靠右 */
+.boot__brand{
+  position:absolute;right:7.4vw;top:50%;transform:translateY(-50%);z-index:4;
+  display:flex;flex-direction:column;align-items:flex-start;color:var(--signal);
+}
+.boot__kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;margin-bottom:15px;opacity:.85}
+.boot__word{
+  font-family:var(--disp);font-weight:700;
+  font-size:clamp(26px,min(5.2vh,4.8vw),64px);
+  line-height:.8;letter-spacing:-.02em;
+  margin-left:-.055em;              /* 抵消字身左侧空隙，让墨边落在节奏线上 */
+}
+.boot__marks{display:flex;gap:5px;margin-top:24px}
+.boot__marks i{width:9px;height:9px;background:var(--signal)}
+.boot__desc{font-size:12px;letter-spacing:.14em;color:var(--panel-2);margin:18px 0 0;opacity:.7}
+.boot__tag{font-family:var(--mono);font-size:10px;letter-spacing:.24em;margin-top:9px;opacity:.55}
+/* 双 V 形箭标外突到左侧留白 */
+.boot__chev{position:absolute;right:100%;top:2px;display:flex;gap:3px;margin-right:16px;opacity:.9}
+.boot__chev i{width:11px;height:11px;border-top:2px solid var(--signal);border-right:2px solid var(--signal);transform:rotate(45deg)}
+
+/* ============================ 粒子聚合 ============================ */
+.fx{
+  position:fixed;inset:0;z-index:150;pointer-events:none;
+  transition:opacity var(--dur-slow) ease;
+}
+.fx.is-off{opacity:0}
+
+/* ============================ 逐级揭示 ============================ */
+/* .rv 只由 JS 添加 —— 若脚本失败，页面内容不会被藏住。
+   注意：面板的实际入场动画走 Web Animations API（见 REVEAL.materialize），
+   不由这里的 transition 负责 —— 实测那条链路整段没生效过。
+   这里保留的只是「未揭示时的起始隐藏态」和框架元素的淡入。 */
+.rv{transition:opacity 520ms var(--ease-apple) 120ms,transform 780ms var(--ease-apple) 120ms}
+.rv:not(.rv--fade){opacity:0;transform:translateY(48px) scale(.965);clip-path:none}
+.rv:not(.rv--fade).in{opacity:1;transform:none}
+/* 固定定位元素（移动端抽屉）只能淡入：一旦写上 transform，
+   会盖掉 .rail 自身的 translateX(-100%) 而让抽屉常驻 */
+.rv--fade{opacity:0;transition:opacity var(--dur-slow) var(--ease)}
+.rv--fade.in{opacity:1}
+
+/* 面板揭示时扫过一道琥珀光带 */
+.panel.rv::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;
+  background:linear-gradient(100deg,transparent 34%,rgba(255,216,0,.30) 50%,transparent 66%);
+  transform:translateX(-100%);
+}
+.panel.rv.in::after,.panel.rv--fade.in::after{animation:wipe .95s cubic-bezier(.5,0,.2,1) .1s both}
+@keyframes wipe{
+  0%{transform:translateX(-100%);opacity:0}
+  22%{opacity:1}
+  100%{transform:translateX(100%);opacity:0}
+}
+
+/* 面板到位后，内部逐项落位：主视觉逐行推上来，表格行 / 占比条 / 矩阵格 / 产线行依次浮现。
+   少了这一层，一块面板就是整块出现 —— 只有框在动、内容没动。
+   编号由 materialize() 按 DOM 顺序自动分配；已带 --i 的（占比条 / 矩阵格 / 产线行）
+   保留自己的组内序号，不会被覆盖。
+   用 animation + fill:both：动画被禁用时元素按常规状态渲染，不会残留隐藏。 */
+@keyframes itemIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* 主视觉：眉标 → 标题 → 正文 → 标签，逐行推上来 */
+.panel.in .hero__grid > div:first-child > *{
+  animation:itemIn .72s var(--ease-apple) both;animation-delay:calc(var(--i,0)*80ms);
+}
+.panel.in .hero__tags .chip{
+  animation:itemIn .62s var(--ease-apple) both;animation-delay:calc(var(--i,0)*80ms);
+}
+.panel.in .tbl tbody tr,
+.panel.in .slist__row,
+.panel.in .bar{
+  animation:itemIn .62s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*60ms + 200ms);
+}
+/* 矩阵 54 格：间隔必须小，否则要等两秒才铺完 */
+.panel.in .mx__c{
+  animation:itemIn .5s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*11ms + 150ms);
+}
+
+/* ============================ 装饰语言 ============================
+   原始视觉系统的「签名」不是某个组件，而是一组可叠加的几何装饰：
+   色条 / 斜纹 / 半调网点 / 角标三角 / 黑白反转 / 大写拉丁字。
+   重要：这套语言里【没有切角、斜切、斜带】—— 层级与状态靠色条、
+   明度反转和角标三角表达，不靠斜边。 */
+
+/* 45° 斜纹：危险 / 施工 / 分隔（游戏 btn_done、image_btn_ap_confirm） */
+.stripes{background-image:repeating-linear-gradient(-45deg,var(--ink) 0 3px,transparent 3px 8px)}
+.stripes--hazard{background-image:repeating-linear-gradient(-45deg,var(--signal) 0 5px,transparent 5px 11px)}
+.stripes--danger{background-image:repeating-linear-gradient(-45deg,var(--alert) 0 4px,transparent 4px 9px)}
+
+/* 半调网点 + 渐隐：游戏内蓝色标题条的网点（bkg_openserver） */
+.halftone{
+  background-image:radial-gradient(currentColor 1px,transparent 1.3px);
+  background-size:7px 7px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent);
+  mask-image:linear-gradient(180deg,#000,transparent);
+}
+
+/* 角标三角：官网右上三角 / 游戏 selected_decor */
+.corner-tri{position:relative}
+.corner-tri::before{
+  content:"";position:absolute;top:-1px;right:-1px;width:0;height:0;
+  border-top:12px solid var(--signal);border-left:12px solid transparent;
+}
+
+/* 左侧色条 + 1px 细框 —— 系统里最常见的强调。
+   直接写 border-left 会让浏览器在角上把两种宽度斜接（miter）出一道小斜边，
+   那也是斜边，系统里不出现；所以交给 border-image 直角拼接。 */
+.bar-left{
+  border:1px solid var(--line-2);border-left-width:4px;
+  border-image:linear-gradient(to right,var(--_c,var(--ink)) 4px,var(--line-2) 4px) 1 1 1 4;
+}
+/* 表格里 border-image 无效，改用 inset 阴影画色条 */
+.bar-top{box-shadow:inset 0 3px 0 var(--_c,var(--signal))}
+
+/* 黑白反转：游戏 btn_on / btn_off —— 主动作靠明度反转而不是彩色 */
+.inverse{background:var(--ink);color:#fff}
+
+/* 水印：大写拉丁展示字，压在内容之下 */
+.watermark{
+  position:absolute;top:-6px;left:-4px;right:0;z-index:0;
+  pointer-events:none;user-select:none;overflow-wrap:break-word;
+  font-family:var(--disp);font-weight:700;letter-spacing:-.02em;
+  /* 原来是一个短词，190px 一行放得下；现在是 39 字符整句，
+     同字号会横着冲出屏幕 —— 补 right 给出换行宽度，字号收到 clamp，
+     让它落成两三行铺满底板，而不是被裁掉只剩开头几个字母。 */
+  font-size:clamp(46px,6.4vw,92px);line-height:.84;color:var(--ink);opacity:.035;
+  font-variant-numeric:lining-nums;
+}
+
+/* ============================ 响应式 ============================ */
+.backdrop{
+  position:fixed;inset:0;z-index:40;background:rgba(20,24,26,.42);
+  /* 移动端抽屉不使用 backdrop-filter。iOS Safari / 部分 Chromium 在
+     fixed + transform + backdrop-filter 组合下会把下层与抽屉文字一起栅格化，
+     展开瞬间出现明显发糊。纯色半透明遮罩既稳定也更省 GPU。 */
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity var(--dur-normal) var(--ease),visibility var(--dur-normal);
+}
+.backdrop.is-on{opacity:1;visibility:visible;pointer-events:auto}
+
+@media (max-width:1180px){
+  .stage__body{grid-template-columns:minmax(0,1fr)}
+  .hero__grid{grid-template-columns:minmax(0,1fr);gap:8px}
+  .dial{display:none}
+}
+@media (max-width:900px){
+  /* 手机上避免 backdrop-filter 与抽屉 transform 叠加导致整层发糊。 */
+  .chrome{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(246,249,251,.98)}
+  .backdrop{top:var(--chrome-h);bottom:var(--stat-h);left:0;right:0}
+  .rail{
+    position:fixed;top:var(--chrome-h);bottom:var(--stat-h);left:0;z-index:50;
+    width:min(276px,calc(100vw - 44px));flex-basis:auto;max-width:calc(100vw - 44px);
+    transform:translate3d(-100%,0,0);transition:transform var(--dur-normal) var(--ease);
+    will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+    box-shadow:12px 0 40px -20px rgba(20,24,26,.5);
+    /* 抽屉自身必须完全不透明，避免下层内容参与合成。 */
+    background:var(--panel-2);
+  }
+  .rail.is-open{transform:translate3d(0,0,0)}
+  .chrome__mid{display:none}
+  .stage__head{padding:12px 18px}
+  .stage__body{padding:18px}
+  .tagline{display:none}
+}
+@media (max-width:620px){
+  .brand__txt{display:none}
+  .brand{padding:0 12px}
+  /* 320px 级窄屏原先 brand + ONLINE + clock + menu 总宽约 377px，
+     会把菜单按钮推到视口外并造成横向溢出。手机只保留时钟与菜单。 */
+  .chrome__right .pill{display:none}
+  .clock{min-width:104px;padding:0 10px}
+  .clock__t{font-size:15px}
+  .icon-btn{width:44px;height:44px;margin:auto 4px}
+  .stage__head{padding-left:14px;padding-right:14px}
+  .stage__body{padding:14px}
+  /* 手机宽度下 158px 自动列会把数字挤到换行，固定两列更好读 */
+  .statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat__v{font-size:23px}
+  .panel__body{padding:15px}
+  /* 底栏留给窄屏的项太多会折行 */
+  .statusbar>div:nth-child(2),
+  .statusbar>div:last-child{display:none}
+}
+@media (max-width:360px){
+  .brand{padding:0 10px}
+  .brand__mark{width:27px;height:27px}
+  .clock{min-width:96px;padding:0 8px}
+  .clock__t{font-size:14px}
+  .clock__d{font-size:8.5px;letter-spacing:.08em}
+  .stage__body{padding:12px}
+  .origin-slot__body{grid-template-columns:42px minmax(0,1fr);gap:12px;padding:16px 14px}
+  .origin-slot__index{font-size:32px}
+  .origin-slot__body b{font-size:18px;overflow-wrap:anywhere}
+  .origin-slot__body p{overflow-wrap:anywhere}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .rv{opacity:1!important;transform:none!important}
+  .fx{display:none!important}
+  .panel.rv.in::after,.panel.rv--fade.in::after{display:none}
+}
+/* 静态模式（?noboot=1）：关闭全部动效，便于截图归档 */
+.is-still *,.is-still *::before,.is-still *::after{animation:none!important;transition:none!important}
+.is-still .boot{display:none}
+.is-still .fx{display:none!important}
+.is-still .rv{opacity:1!important;transform:none!important}
+@media print{
+  .boot,.chrome,.rail,.ticker,.statusbar{display:none!important}
+  .app{height:auto;background:#fff}
+  .stage__body{overflow:visible;grid-template-columns:minmax(0,1fr)}
+}
+
+/* ============================================================
+   ORIGIN OFFICIAL WEBSITE — placeholder layer
+   保留原界面的工业编辑感、网格、黄黑信号系统与动态语言，
+   但内容结构改为官网信息架构。
+   ============================================================ */
+.origin-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.origin-slot--wide{grid-column:1/-1}
+.origin-slot__body{
+  min-width:0;
+  min-height:148px;
+  display:grid;
+  grid-template-columns:72px 1fr;
+  align-items:end;
+  gap:20px;
+  padding:22px 24px 24px;
+  position:relative;
+  overflow:hidden;
+}
+.origin-slot__body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(255,245,0,.12),transparent 34%),
+    repeating-linear-gradient(90deg,transparent 0 39px,rgba(16,17,16,.035) 39px 40px);
+  pointer-events:none;
+}
+.origin-slot__body--compact{min-height:126px}
+.origin-slot__index{
+  position:relative;
+  z-index:1;
+  font-family:var(--mono);
+  font-size:38px;
+  line-height:1;
+  letter-spacing:-.08em;
+  color:var(--ink);
+  opacity:.22;
+}
+.origin-slot__body b{
+  min-width:0;overflow-wrap:anywhere;
+  position:relative;
+  z-index:1;
+  display:block;
+  font-family:var(--disp);
+  font-size:24px;
+  line-height:1.15;
+  letter-spacing:-.02em;
+}
+.origin-slot__body p{
+  min-width:0;overflow-wrap:anywhere;
+  position:relative;
+  z-index:1;
+  margin:8px 0 0;
+  color:var(--ink-3);
+}
+.origin-side__mark{
+  height:118px;
+  display:grid;
+  place-items:center;
+  margin:2px 0 12px;
+  border:1px solid var(--line-2);
+  background:
+    linear-gradient(135deg,rgba(255,245,0,.3),transparent 44%),
+    repeating-linear-gradient(90deg,transparent 0 27px,rgba(16,17,16,.04) 27px 28px);
+  font-family:var(--disp);
+  font-size:72px;
+  font-weight:700;
+  letter-spacing:-.08em;
+}
+@media(max-width:720px){
+  .origin-grid{grid-template-columns:1fr}
+  .origin-slot--wide{grid-column:auto}
+  .origin-slot__body{grid-template-columns:52px 1fr;padding:18px}
+  .origin-slot__body b{font-size:20px}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ===================== 点按进入 =====================
+     保留原始交互中的「点按开始」：按了才进后面的黄轨加载。
+     配色与排版沿用启动页（深底 #101110 + 信号黄 + 海报式字标），只在版心上区分：
+     字标居中、提示落在底部。 -->
+<div class="tap" id="tap" role="button" tabindex="0" aria-label="点按屏幕开始">
+  <div class="intro-notice">页面非本人制作，请勿使用其中相关的素材或者设计灵感</div>
+  <div class="tap__brand">
+    <span class="tap__kicker">ORIGIN OFFICIAL</span>
+    <span class="tap__word">ORIGIN</span>
+    <span class="tap__word">OSS</span>
+    <div class="tap__marks"><i></i><i></i><i></i></div>
+    <p class="tap__desc">官方网站 · CONTENT PENDING</p>
+  </div>
+  <div class="tap__hint">
+    <span class="tap__pulse"><i></i></span>
+    <span class="tap__cn">点按屏幕开始</span>
+    <span class="tap__en">TAP TO START</span>
+  </div>
+  <span class="tap__tag">ORIGIN · OFFICIAL WEBSITE</span>
+</div>
+
+<!-- ===================== 启动序列 ===================== -->
+<div class="boot" id="boot">
+  <div class="intro-notice">页面非本人制作，请勿使用其中相关的素材或者设计灵感</div>
+  <div class="boot__rail" id="bootRail"></div>
+  <div class="boot__ticks" id="bootTicks"></div>
+  <div class="boot__read" id="bootRead">
+    <b id="bootPct">0</b><span>PERCENT</span><em id="bootStat">INITIALIZING</em>
+  </div>
+  <div class="boot__brand">
+    <span class="boot__kicker">ORIGIN OFFICIAL</span>
+    <span class="boot__word">ORIGIN</span>
+    <span class="boot__word">OSS</span>
+    <div class="boot__marks"><i></i><i></i><i></i></div>
+    <p class="boot__desc">官方网站 · CONTENT PENDING</p>
+    <span class="boot__tag">OFFICIAL WEBSITE</span>
+    <span class="boot__chev"><i></i><i></i></span>
+  </div>
+  <div class="boot__flood" id="bootFlood"></div>
+</div>
+
+<!-- ===================== 应用 ===================== -->
+<div class="app">
+
+  <!-- 顶栏 -->
+  <header class="chrome">
+    <div class="brand">
+      <!-- 原创标识：两片对置的角括号夹一条信号黄光柱，读作「闸门 / 开口」。
+           刻意不使用任何官方素材 —— 借鉴的是视觉语言，不是资产。 -->
+      <svg class="brand__mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M2 2h15v7h-8v22h8v7H2z" fill="currentColor"/>
+        <path d="M38 2H23v7h8v22h-8v7h15z" fill="currentColor"/>
+        <rect x="18" y="9" width="4" height="22" fill="var(--signal)"/>
+      </svg>
+      <div class="brand__txt">
+        <span class="brand__name">ORIGIN</span>
+        <span class="brand__sub">OFFICIAL · WEBSITE</span>
+      </div>
+    </div>
+
+    <div class="chrome__mid">
+      <div class="readout">
+        <span class="readout__k">SITE</span>
+        <span class="readout__v">官网 <b>ORIGIN</b></span>
+      </div>
+      <div class="readout">
+        <span class="readout__k">STATUS</span>
+        <span class="readout__v">建设中 / PREVIEW</span>
+      </div>
+      <div class="readout">
+        <span class="readout__k">CHANNEL</span>
+        <span class="readout__v">公共访问 <b>PUBLIC</b></span>
+      </div>
+    </div>
+
+    <div class="chrome__right">
+      <div class="pill"><i class="dot"></i> ONLINE</div>
+      <div class="clock">
+        <span class="clock__t" id="clockT">--:--:--</span>
+        <span class="clock__d" id="clockD">----.--.--</span>
+      </div>
+      <button class="icon-btn" id="railToggle" aria-label="折叠导航栏" aria-controls="rail" aria-expanded="false" title="折叠导航栏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M4 6h16M4 12h10M4 18h16"/><path d="M17 9l3 3-3 3"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <!-- 侧栏：一级 + 二级菜单 -->
+    <aside class="rail" id="rail">
+      <div class="rail__head">
+        <span class="rail__title">Navigation / 导航</span>
+        <span class="panel__code" id="navCount">—</span>
+      </div>
+
+      <div class="search">
+        <div class="search__box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+          </svg>
+          <input id="navSearch" type="search" placeholder="检索页面…" aria-label="检索页面" autocomplete="off">
+        </div>
+        <div class="search__hint">输入关键词过滤页面</div>
+      </div>
+
+      <nav class="rail__scroll" aria-label="主菜单">
+        <ul class="nav" id="nav"></ul>
+      </nav>
+
+      <div class="rail__foot">
+        <div class="meter"><span>SITE</span><div class="meter__bar"><div class="meter__fill" id="m1"></div></div><span id="m1v">0%</span></div>
+        <div class="meter"><span>SYNC</span><div class="meter__bar"><div class="meter__fill meter__fill--amber" id="m2"></div></div><span id="m2v">0%</span></div>
+      </div>
+    </aside>
+
+    <!-- 主台 -->
+    <main class="stage">
+      <div class="stage__head">
+        <div class="crumb">
+          <span id="crumbSec">—</span>
+          <i class="crumb__sep"></i>
+          <b id="crumbItem">—</b>
+        </div>
+        <div class="spacer"></div>
+        <span class="tagline">ORIGIN OFFICIAL · CONTENT PENDING</span>
+      </div>
+
+      <div class="stage__body" id="stageBody">
+        <div class="watermark" id="watermark" aria-hidden="true">ORIGIN / OFFICIAL WEBSITE</div>
+        <div class="col" id="colMain"></div>
+        <div class="col" id="colSide"></div>
+      </div>
+      <div class="wipe" id="wipe" aria-hidden="true"></div>
+      <div class="lab-scan" id="labScan" aria-hidden="true"></div>
+
+      <div class="ticker">
+        <div class="ticker__tag">LIVE FEED</div>
+        <div class="ticker__track" id="ticker"></div>
+      </div>
+    </main>
+
+    <!-- 移动端遮罩必须与侧栏处于同一 stacking context：
+         rail z=50 > backdrop z=40 > stage，避免遮罩盖到抽屉本身。 -->
+    <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  </div>
+
+  <!-- 底栏 -->
+  <footer class="statusbar">
+    <div><i class="dot" style="width:6px;height:6px"></i> ORIGIN · OFFICIAL WEBSITE</div>
+    <div>BUILD PREVIEW</div>
+    <div id="sbLatency">SYNC 12ms</div>
+    <div class="spacer"></div>
+    <div>© ORIGIN · 等待补充</div>
+  </footer>
+</div>
+
+<canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+<script>
+"use strict";
+/* ============================================================
+   1. 数据层 —— 一级菜单 / 二级菜单 / 页面内容
+   ============================================================ */
+const SECTIONS = [
+  {
+    id:"home", code:"01", name:"首页", en:"HOME",
+    items:[
+      {
+        id:"home-main", code:"01.1", name:"官网首页", en:"OFFICIAL HOME",
+        title:"Origin", sub:"OFFICIAL WEBSITE",
+        lead:"等待补充",
+        tags:["ORIGIN","OFFICIAL","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"about", code:"02", name:"关于 Origin", en:"ABOUT",
+    items:[
+      {
+        id:"about-intro", code:"02.1", name:"品牌简介", en:"PROFILE",
+        title:"关于 Origin", sub:"ABOUT ORIGIN",
+        lead:"等待补充",
+        tags:["ABOUT","ORIGIN","等待补充"]
+      },
+      {
+        id:"about-vision", code:"02.2", name:"愿景与方向", en:"VISION",
+        title:"愿景与方向", sub:"VISION & DIRECTION",
+        lead:"等待补充",
+        tags:["VISION","DIRECTION","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"projects", code:"03", name:"项目", en:"PROJECTS",
+    items:[
+      {
+        id:"projects-main", code:"03.1", name:"项目概览", en:"OVERVIEW",
+        title:"项目概览", sub:"PROJECT OVERVIEW",
+        lead:"等待补充",
+        tags:["PROJECTS","OVERVIEW","等待补充"]
+      },
+      {
+        id:"projects-open", code:"03.2", name:"开源计划", en:"OPEN SOURCE",
+        title:"开源计划", sub:"OPEN SOURCE",
+        lead:"等待补充",
+        tags:["OPEN SOURCE","ORIGIN OSS","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"technology", code:"04", name:"技术", en:"TECHNOLOGY",
+    items:[
+      {
+        id:"technology-core", code:"04.1", name:"核心技术", en:"CORE",
+        title:"核心技术", sub:"CORE TECHNOLOGY",
+        lead:"等待补充",
+        tags:["TECHNOLOGY","CORE","等待补充"]
+      },
+      {
+        id:"technology-roadmap", code:"04.2", name:"开发路线", en:"ROADMAP",
+        title:"开发路线", sub:"ROADMAP",
+        lead:"等待补充",
+        tags:["ROADMAP","DEVELOPMENT","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"news", code:"05", name:"动态", en:"NEWS",
+    items:[
+      {
+        id:"news-latest", code:"05.1", name:"最新动态", en:"LATEST",
+        title:"最新动态", sub:"LATEST NEWS",
+        lead:"等待补充",
+        tags:["NEWS","LATEST","等待补充"]
+      },
+      {
+        id:"news-notice", code:"05.2", name:"公告", en:"NOTICE",
+        title:"公告", sub:"NOTICE",
+        lead:"等待补充",
+        tags:["NOTICE","UPDATE","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"ecosystem", code:"06", name:"生态与合作", en:"ECOSYSTEM",
+    items:[
+      {
+        id:"ecosystem-community", code:"06.1", name:"社区", en:"COMMUNITY",
+        title:"社区", sub:"COMMUNITY",
+        lead:"等待补充",
+        tags:["COMMUNITY","ECOSYSTEM","等待补充"]
+      },
+      {
+        id:"ecosystem-partners", code:"06.2", name:"合作", en:"PARTNERS",
+        title:"合作", sub:"PARTNERS",
+        lead:"等待补充",
+        tags:["PARTNERS","COOPERATION","等待补充"]
+      }
+    ]
+  },
+  {
+    id:"contact", code:"07", name:"联系", en:"CONTACT",
+    items:[
+      {
+        id:"contact-main", code:"07.1", name:"联系我们", en:"CONTACT US",
+        title:"联系我们", sub:"CONTACT ORIGIN",
+        lead:"等待补充",
+        tags:["CONTACT","ORIGIN","等待补充"]
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   2. 工具
+   ============================================================ */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* ?noboot=1 -> 跳过启动动画并冻结所有动效，便于截图 / 归档 */
+const QUIET = REDUCED || /[?&]noboot/.test(location.search);
+if(QUIET) document.documentElement.classList.add("is-still");
+/* ?slow=N 把揭示节奏整体放慢，便于观察 */
+const SLOW=(function(){
+  const m=/[?&]slow=([\d.]+)/.exec(location.search);
+  const v=m?parseFloat(m[1]):1;
+  return (v>=1&&v<=10)?v:1;
+})();
+
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+/* 每次进入页面的数据允许在合理区间内波动。
+   把本次加载的随机量混进种子，同一条目每次刷新拿到的是一组不同但同量级的数；
+   区间由下面的 clamp 兜住（base 的 0.34–1.62 倍），不会跑出合理范围。 */
+const RUN=(Math.random()*0xffffffff)>>>0;
+const runRnd=mulberry32(RUN);
+/* 给写死在 SECTIONS 里的读数加一点浮动：整数保持整数、一位小数保持一位小数，
+   0 不动（「0 处盲区」这类不该随机）。幅度 ±4.5%，够看出变化又不失真。 */
+function jitter(v){
+  if(!v)return v;
+  const out=v*(1+(runRnd()-.5)*0.09);
+  return Number.isInteger(v)?Math.round(out):Number(out.toFixed(1));
+}
+function series(seed,n,base){
+  const r=mulberry32(hashStr(seed)^RUN);let v=base;const out=[];
+  for(let i=0;i<n;i++){v+=(r()-.5)*base*.30;v=Math.max(base*.34,Math.min(base*1.62,v));out.push(v)}
+  return out;
+}
+const fmt=n=>Number.isInteger(n)?n.toLocaleString("en-US"):n.toFixed(2).replace(/\.?0+$/,"");
+
+/* ============================================================
+   3. 状态
+   ============================================================ */
+/* 初值从 SECTIONS 推导，不写死 id ——
+   写死的话，一旦重命名条目，render() 会在 findItem 失败后静默提前返回，
+   页面直接空白且不抛任何错（这次换整套菜单就踩到了）。 */
+const state={section:SECTIONS[0].id,item:SECTIONS[0].items[0].id,query:"",mapOpen:true};
+
+function findItem(id){
+  for(const s of SECTIONS)for(const i of s.items)if(i.id===id)return{sec:s,item:i};
+  return null;
+}
+
+/* ============================================================
+   4. 导航渲染（一级 + 二级）
+   ============================================================ */
+const navEl=$("#nav");
+
+function buildNav(){
+  navEl.innerHTML=SECTIONS.map((sec,si)=>{
+    const subs=sec.items.map((it,ji)=>`
+      <li>
+        <button class="sub__item" style="--j:${ji}" data-item="${it.id}" data-search="${(it.name+it.en+it.code).toLowerCase()}">
+          <span>${it.name}</span>
+          <span class="sub__idx">${it.code}</span>
+        </button>
+      </li>`).join("");
+    return `
+      <li class="nav__group" style="--i:${si}" data-section="${sec.id}" data-search="${(sec.name+sec.en+sec.code).toLowerCase()}">
+        <button class="nav__btn" aria-expanded="false">
+          <span class="nav__code">${sec.code}</span>
+          <span class="nav__label">
+            <span class="nav__cn">${sec.name}</span>
+            <span class="nav__en">${sec.en}</span>
+          </span>
+          <svg class="nav__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <ul class="nav__sub">${subs}</ul>
+      </li>`;
+  }).join("");
+
+  navEl.addEventListener("click",e=>{
+    const grp=e.target.closest(".nav__group");
+    const sub=e.target.closest(".sub__item");
+    if(sub){select(sub.dataset.item);closeDrawer();return}
+    if(grp){
+      const open=grp.classList.contains("is-open");
+      if(open && !grp.classList.contains("has-active")) grp.classList.remove("is-open");
+      else if(open) grp.classList.remove("is-open");
+      else{
+        $$(".nav__group",navEl).forEach(g=>{if(g!==grp)g.classList.remove("is-open")});
+        grp.classList.add("is-open");
+      }
+      syncAria();
+    }
+  });
+}
+
+const TOTAL_ITEMS = SECTIONS.reduce((n,s)=>n+s.items.length,0);
+$("#navCount").textContent = TOTAL_ITEMS+" MOD";
+
+function syncAria(){
+  $$(".nav__group",navEl).forEach(g=>{
+    const btn=$(".nav__btn",g);
+    btn.setAttribute("aria-expanded",String(g.classList.contains("is-open")));
+  });
+}
+
+function syncNav(){
+  $$(".nav__group",navEl).forEach(g=>{
+    const sec=g.dataset.section;
+    const hasActive=sec===state.section;
+    g.classList.toggle("has-active",hasActive);
+    if(hasActive) g.classList.add("is-open");
+    else g.classList.remove("is-open");
+  });
+  $$(".sub__item",navEl).forEach(b=>b.classList.toggle("is-active",b.dataset.item===state.item));
+  syncAria();
+}
+
+/* 搜索过滤二级菜单 */
+function applyFilter(q){
+  const s=q.trim().toLowerCase();
+  navEl.classList.toggle("is-filtering",!!s);
+  let hits=0;
+  $$(".nav__group",navEl).forEach(g=>{
+    const secHit=!s||g.dataset.search.includes(s);
+    let secVisible=false;
+    $$(".sub__item",g).forEach(b=>{
+      const hit=!s||secHit||b.dataset.search.includes(s);
+      b.parentElement.hidden=!hit;
+      if(hit)secVisible=true;
+    });
+    const selfHit=!s||secHit||secVisible;
+    g.hidden=!selfHit;
+    if(selfHit)hits++;
+    if(s) g.classList.toggle("is-open",secVisible);
+    else g.classList.remove("is-open");
+  });
+  $("#navCount").textContent=s?`${hits} HIT`:`${TOTAL_ITEMS} MOD`;
+  if(!s)syncNav();
+  syncAria();
+}
+
+/* ============================================================
+   5. Origin 官网内容渲染
+   ============================================================ */
+function heroHTML(it){
+  const tags=(it.tags||[]).map((t,i)=>`<span class="chip${i===0?" chip--amber":""}">${t}</span>`).join("");
+  return `
+  <section class="panel panel--cut hero">
+    <div class="hero__grid">
+      <div>
+        <div class="hero__eyebrow"><i></i><span>${it.code} / ${it.en}</span></div>
+        <h1>${it.title}<em>${it.sub}</em></h1>
+        <p>${it.lead}</p>
+        <div class="hero__tags">${tags}</div>
+      </div>
+      <div class="dial">${dialSVG()}</div>
+    </div>
+  </section>`;
+}
+
+function dialSVG(){
+  const ticks=Array.from({length:48},(_,i)=>{
+    const a=(i/48)*Math.PI*2,long=i%4===0;
+    const r1=96,r2=long?86:91;
+    const x1=110+r1*Math.cos(a),y1=110+r1*Math.sin(a);
+    const x2=110+r2*Math.cos(a),y2=110+r2*Math.sin(a);
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="currentColor" stroke-width="${long?1.4:0.7}" opacity="${long?.55:.26}"/>`;
+  }).join("");
+  return `
+  <svg viewBox="0 0 220 220" fill="none" aria-hidden="true">
+    <circle cx="110" cy="110" r="96" stroke="currentColor" stroke-width="1" opacity=".28"/>
+    <circle cx="110" cy="110" r="74" stroke="currentColor" stroke-width="1" opacity=".18" stroke-dasharray="3 5"/>
+    <circle cx="110" cy="110" r="48" stroke="currentColor" stroke-width="1" opacity=".22"/>
+    <g>${ticks}</g>
+    <g class="dial__spin">
+      <path d="M110 14 A96 96 0 0 1 200 78" stroke="var(--signal)" stroke-width="2.4"/>
+      <circle cx="200" cy="78" r="2.6" fill="var(--signal)"/>
+    </g>
+    <g class="dial__spin-rev">
+      <path d="M20 142 A96 96 0 0 0 110 206" stroke="currentColor" stroke-width="1.4" opacity=".5"/>
+    </g>
+    <path d="M110 30 L118 110 L110 190 L102 110 Z" fill="currentColor" opacity=".07"/>
+    <line x1="110" y1="42" x2="110" y2="178" stroke="currentColor" stroke-width="1" opacity=".3"/>
+    <line x1="42" y1="110" x2="178" y2="110" stroke="currentColor" stroke-width="1" opacity=".3"/>
+    <circle cx="110" cy="110" r="4" fill="var(--signal)"/>
+    <text x="110" y="136" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="9" letter-spacing="2" fill="currentColor" opacity=".5">ORIGIN</text>
+  </svg>`;
+}
+
+function officialContentHTML(it){
+  return `
+  <section class="origin-grid">
+    <article class="panel panel--sec panel--cut-sm panel--plain origin-slot origin-slot--wide">
+      <div class="panel__head">
+        <h3>内容概览</h3><span class="panel__code">CONTENT</span>
+        <div class="spacer"></div><span class="panel__code">${it.code}</span>
+      </div>
+      <div class="origin-slot__body">
+        <span class="origin-slot__index">01</span>
+        <div><b>等待补充</b><p>等待补充</p></div>
+      </div>
+    </article>
+
+    <article class="panel panel--sec panel--cut-sm panel--plain origin-slot">
+      <div class="panel__head"><h3>重点信息</h3><span class="panel__code">FEATURE</span></div>
+      <div class="origin-slot__body origin-slot__body--compact">
+        <span class="origin-slot__index">02</span>
+        <div><b>等待补充</b><p>等待补充</p></div>
+      </div>
+    </article>
+
+    <article class="panel panel--sec panel--cut-sm panel--plain origin-slot">
+      <div class="panel__head"><h3>最新更新</h3><span class="panel__code">UPDATE</span></div>
+      <div class="origin-slot__body origin-slot__body--compact">
+        <span class="origin-slot__index">03</span>
+        <div><b>等待补充</b><p>等待补充</p></div>
+      </div>
+    </article>
+  </section>`;
+}
+
+function sideHTML(it){
+  return `
+  <section class="panel panel--cut-sm panel--plain side-card origin-side">
+    <div class="panel__head"><h3>Origin</h3><span class="panel__code">OFFICIAL</span></div>
+    <div class="panel__body">
+      <div class="origin-side__mark">O</div>
+      <div class="kv"><span>页面</span><b>${it.name}</b></div>
+      <div class="kv"><span>状态</span><b>等待补充</b></div>
+      <div class="kv"><span>版本</span><b>PREVIEW</b></div>
+    </div>
+  </section>
+
+  <section class="panel panel--cut-sm panel--plain side-card">
+    <div class="panel__head"><h3>快速信息</h3><span class="panel__code">INFO</span></div>
+    <div class="panel__body" style="padding-top:6px;padding-bottom:6px">
+      <div class="kv"><span>品牌介绍</span><b>等待补充</b></div>
+      <div class="kv"><span>项目状态</span><b>等待补充</b></div>
+      <div class="kv"><span>最新动态</span><b>等待补充</b></div>
+      <div class="kv"><span>联系方式</span><b>等待补充</b></div>
+    </div>
+  </section>
+
+  <section class="panel panel--cut-sm panel--plain side-card">
+    <div class="panel__head"><h3>站点说明</h3><span class="panel__code">SITE</span></div>
+    <div class="panel__body" style="padding-top:6px;padding-bottom:6px">
+      <div class="kv"><span>站点</span><b>Origin</b></div>
+      <div class="kv"><span>类型</span><b>官方网站</b></div>
+      <div class="kv"><span>内容</span><b>等待补充</b></div>
+      <div class="kv"><span>访问</span><b>PUBLIC</b></div>
+    </div>
+  </section>`;
+}
+
+/* ============================================================
+   6. 动画辅助
+   ============================================================ */
+function animateCounters(root){
+  $$("[data-count]",root).forEach(el=>{
+    const target=parseFloat(el.dataset.count);
+    const dec=parseInt(el.dataset.dec||"0",10);
+    const put=v=>el.textContent=dec?v.toFixed(dec):Math.round(v).toLocaleString("en-US");
+    if(QUIET){put(target);return}
+    const dur=1000; let t0=null;
+    requestAnimationFrame(function tick(t){
+      /* 以首帧时间戳为基准：不再与 performance.now() 混用时钟，
+         否则首帧可能出现负进度（数字闪成负数） */
+      if(t0===null)t0=t;
+      const p=Math.max(0,Math.min(1,(t-t0)/dur)), e=1-Math.pow(1-p,3);
+      put(target*e);
+      if(p<1)requestAnimationFrame(tick);
+    });
+  });
+  const g=$("#gaugeVal",root);
+  if(g){
+    g.style.strokeDashoffset=g.dataset.off;   /* 静态模式直接落位，否则由 CSS 过渡补间 */
+  }
+  /* 占比条的宽度在模块浮现时才落位，这样能看见它涨上去 */
+  $$(".bar__fill",root).forEach(f=>{f.style.width=f.dataset.w||"0"});
+}
+
+/* 侧栏底部资源表 —— 全局只初始化一次，不随页面切换重算 */
+function initMeters(){
+  const m1=$("#m1"),m2=$("#m2");
+  if(!m1||!m2)return;
+  const a=54+Math.random()*16, b=62+Math.random()*22;
+  const apply=()=>{
+    m1.style.width=a+"%"; $("#m1v").textContent=Math.round(a)+"%";
+    m2.style.width=b+"%"; $("#m2v").textContent=Math.round(b)+"%";
+  };
+  if(QUIET)apply(); else requestAnimationFrame(apply);
+}
+
+function drawChart(){
+  /* 页面上有多条折线（单图 + 双线比对），逐条重放描线动画 */
+  $$("svg.chart .draw").forEach(ln=>{
+    if(QUIET){ln.classList.remove("draw");return}
+    /* 不再取 getTotalLength()：几何读取会强制同步布局，clip 揭示不需要路径长度 */
+    ln.classList.remove("draw");
+    void ln.offsetWidth;
+    ln.classList.add("draw");
+  });
+}
+
+/* ============================================================
+   6.5 背景微尘
+   粒子只承担「氛围」而不是「转场」：面板光线的变化、管道逸出的烟雾、
+   飘散的尘埃与雪花 —— 缓慢、常驻、不受操作输入影响，只为给静态页面
+   添呼吸感，从不参与界面的构建与拆除。
+   界面的出现与消失交给几何化的位移与透明度（见 6.6）。
+   ============================================================ */
+const FX=(function(){
+  const cv=document.getElementById("fx");
+  const noop={ambient(){},reset(){}};
+  if(!cv||QUIET||REDUCED)return noop;
+  const ctx=cv.getContext("2d");
+  let W=0,H=0,DPR=1,dust=[],raf=0,last=0;
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth;H=window.innerHeight;
+    cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+    cv.style.width=W+"px";cv.style.height=H+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",()=>{resize();seed()});
+
+  /* 数量少、速度慢、透明度极低：能感觉到画面在动，但说不清哪里有东西 */
+  function seed(){
+    resize();
+    const n=Math.round(Math.min(96,Math.max(34,W*H/24000)));
+    dust=[];
+    for(let i=0;i<n;i++){
+      dust.push({
+        x:rnd(0,W), y:rnd(0,H),
+        vx:rnd(-.10,.10), vy:rnd(-.26,-.05),    /* 整体缓慢上浮 */
+        r:rnd(.7,1.9),
+        ph:rnd(0,Math.PI*2), sp:rnd(.00035,.001),
+        cool:Math.random()<.32                   /* 三成青蓝，其余墨色 */
+      });
+    }
+  }
+  seed();
+
+  function frame(now){
+    const dt=Math.min(now-(last||now),64); last=now;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<dust.length;i++){
+      const d=dust[i];
+      d.x+=(d.vx+Math.sin(now*d.sp+d.ph)*.17)*dt/16;
+      d.y+=d.vy*dt/16;
+      if(d.y<-8){d.y=H+8;d.x=rnd(0,W)}
+      if(d.x<-8)d.x=W+8; else if(d.x>W+8)d.x=-8;
+      const a=.045+Math.abs(Math.sin(now*d.sp*2.3+d.ph))*.125;
+      ctx.fillStyle=d.cool
+        ?"rgba(23,121,164,"+a.toFixed(3)+")"
+        :"rgba(19,32,41,"+(a*.85).toFixed(3)+")";
+      ctx.fillRect(d.x,d.y,d.r,d.r);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  return {
+    /* 常驻启动；标签页不可见时 rAF 自动暂停，不会额外耗电 */
+    ambient(){ if(!raf){last=0;raf=requestAnimationFrame(frame)} },
+    reset(){ cancelAnimationFrame(raf);raf=0;ctx.clearRect(0,0,W,H) }
+  };
+})();
+
+/* ============================================================
+   6.6 逐级揭示
+   ============================================================ */
+const REVEAL=(function(){
+  const queue=[];
+  const ios=new Map();
+  let armed=false;
+  const off=()=>QUIET||REDUCED||!("IntersectionObserver" in window);
+  /* 只有"模块"才走粒子聚合；顶栏/侧栏这类框架元素直接淡入 */
+  const isModule=el=>!!el.classList&&(el.classList.contains("panel")||el.classList.contains("stat"));
+
+  /* 所有参与揭示的模块元素。
+     早先这里只记「已组装好」的（live），于是被擦掉的元素就再没人管 ——
+     而它是被比例判定擦掉的，交叉状态压根没变过，
+     IntersectionObserver 不会回调，滚回来就永远不显示了。
+     现在两种状态都在集合里，由同一个比例判定双向同步。 */
+  const watched=new Set();
+
+  /* 参与逐项落位的子元素 */
+  const CHOREO=".hero__grid > div:first-child > *,.hero__tags .chip,.tbl tbody tr,.bar,.slist__row,.mx__c";
+  /* 转场黄块还盖着的时候先别放内容：动画在遮罩底下跑完，掀开时就"已经到位"了，
+     看着跟没动画一样 —— 首次进入没遮罩所以正常，点菜单才会露馅。 */
+  let holdUntil=0;
+  /* 容器矩形缓存。滚动容器不在滚动时它的 rect 不会变，
+     每轮轮询都去 getBoundingClientRect() 等于白白排队一次布局结算。
+     由 scroll / resize 事件负责失效，没必要滚动时只读一次。 */
+  let boxRect=null;
+  function refreshBox(){ boxRect=null }
+
+  /* 面板入场用 Web Animations API，显式写死起止帧，
+     不再依赖「.rv 起始隐藏 + 加 .in 触发 transition」那条链路 ——
+     实测那条链路整段没生效：面板从头到尾 op=1.00、ty=0.0，
+     transition-delay 还是个负值，等于动画根本没跑。
+     WAAPI 直接给出 from/to，fill:"both" 保证延迟期间就停在起始帧上。 */
+  const IN_FRAMES=[
+    {opacity:0,transform:"translateY(34px) scale(.975)"},
+    {opacity:1,transform:"none"}
+  ];
+  const OUT_FRAMES=[
+    {opacity:1,transform:"none"},
+    {opacity:0,transform:"translateY(30px) scale(.985)"}
+  ];
+  function materialize(el){
+    /* 级联延迟只用于首屏那一次编排。
+       __d 是 render() 时按 DOM 顺序一次分配给全部面板的（第 6 块就有 380ms），
+       滚动触发时若还沿用，面板进了视口却要干等 —— 这就是「不跟手」。
+       用过一次即清零，之后一律立即起跑。 */
+    const d=el.__d||0, first=d>0;
+    el.__d=0;
+    if(!isModule(el)){
+      el.classList.add("in");
+      if(el.classList.contains("rail"))el.classList.add("is-nav-in");
+      return;
+    }
+    el.classList.remove("is-out");
+    if(el.__anim)el.__anim.cancel();
+    /* 图表面板不做淡入/位移：图框直接出现，曲线由 drawChart() 沿 dashoffset 铺开。 */
+    const chartPanel=!!(el.querySelector&&el.querySelector("svg.chart"));
+    if(chartPanel){
+      el.style.opacity="1";
+      el.style.transform="none";
+    }else{
+      const dur=first?780:340;
+      el.__anim=el.animate(IN_FRAMES,{
+        duration:dur,delay:d,easing:"cubic-bezier(.22,1.12,.36,1)",fill:"both"
+      });
+      /* 落位兜底：Animation.finished 依赖动画时钟，时钟被节流时它永远不兑现，
+         面板就被冻在起始帧上。到点无论如何都要落到终态。
+         只钉内联终态、不动动画 —— 先 cancel 会把 WAAPI 对 opacity 的占用一起撤掉，
+         撤掉后内联 1 与 .rv 基础态的 0 分属两条声明，又会开一次过渡。 */
+      const b=el.__anim;
+      el.__land=setTimeout(()=>{ if(el.__anim===b&&b.playState!=="finished"){
+        el.style.transition="none";el.style.opacity="1";el.style.transform="none";
+        b.cancel();el.__anim=null;
+      } }, d+dur+140);
+    }
+    /* 动画期间冻结进出判定：动画会把面板自己的版面挪一挪（角标、内边距），
+       判定若在这段时间里改判，就会和动画互相追着跑。时间戳自己会过期。 */
+    el.__lock=performance.now()+d+(chartPanel?1400:900);
+    const a=el.__anim;
+    if(a&&a.finished)a.finished.then(()=>{
+      if(el.__anim===a){
+        el.__anim=null;
+        clearTimeout(el.__land);
+        el.style.transition="none";
+        el.style.opacity="1";
+        el.style.transform="none";
+        a.cancel();
+      }
+    }).catch(()=>{});
+    el.classList.add("in");
+    el.querySelectorAll(CHOREO).forEach((c,i)=>{
+      if(!c.style.getPropertyValue("--i"))c.style.setProperty("--i",i);
+    });
+    animateCounters(el);
+    if(el.querySelector&&el.querySelector("svg.chart"))drawChart();
+  }
+  /* 反向：滑出视口就把这一块沉掉（先慢后快，跟入场的先快后慢正好相反） */
+  function disperse(el){
+    clearTimeout(el.__land);   /* 别把正在退场的面板又钉回来 */
+    el.classList.remove("in");
+    if(el.__anim)el.__anim.cancel();
+    /* 清掉钉住的内联终态：不清的话退场动画结束后 opacity:1 会让面板弹回可见 */
+    el.style.opacity="";el.style.transform="";el.style.transition="";
+    el.__anim=el.animate(OUT_FRAMES,{
+      duration:720,easing:"cubic-bezier(.42,0,.9,.25)",fill:"both"
+    });
+    el.__lock=performance.now()+720;
+    const a=el.__anim;
+    if(a&&a.finished)a.finished.then(()=>{ if(el.__anim===a){el.__anim=null;a.cancel()} }).catch(()=>{});
+  }
+  /* ================= 进出判定 =================
+     重写要点，与旧版的差别在这里：
+
+     1) 用 offsetTop / offsetHeight 算可见比例，不用 getBoundingClientRect()。
+        入场帧带 translateY(34px)、离场带 30px，而 gBCR 读的是变换后的矩形 ——
+        贴着视口边缘的模块会被自己的动画推出阈值，判定来回翻就是「闪」。
+        旧版为此加了 __busyUntil 时间锁：动画之后 900ms 内冻结判定。
+        那是拿「不判定」换「不闪」：滚开之后要干等满 900ms 才收，
+        过期那一刻再突然收掉 —— 既不跟手，看得见的那一下还很突兀。
+        offsetTop 是布局位置，transform 不影响它，判定天然稳定，
+        于是时间锁、playState 之类的补丁全都不需要了。
+
+     2) 判定基于滚动容器的 scrollTop / clientHeight，而不是视口矩形。
+        栏数切换、窗口缩放、侧栏折起，用的都是同一把尺子。
+
+     3) 门槛只由 SHOW / HIDE 两个常量决定，中间是迟滞带。
+        带内维持现状，临界附近浮动不会来回翻。 */
+  const SHOW=.08;   /* 露出这个比例就放出来 */
+  const HIDE=.02;   /* 掉到这个比例以下才收回去 */
+
+  /* 累加 offsetTop 直到滚动容器。
+     面板的 offsetParent 是它所在的 .col（position:relative），
+     而 .col 的 offsetParent 才是 .stage__body —— 中间那一层不能漏。
+     地图页把两栏并成一栏后右栏会落到主栏下方，那一层偏移很大，
+     漏掉的话右栏所有模块的判定都会错位。 */
+  function layoutTop(el,box){
+    let t=0,n=el;
+    while(n&&n!==box){t+=n.offsetTop;n=n.offsetParent}
+    return t;
+  }
+
+  function sync(el,st,vh){
+    if(!el.isConnected)return;
+    if(performance.now()<holdUntil)return;   /* 让位给转场黄块 */
+    if(performance.now()<el.__lock)return;   /* 动画期间不改判 */
+    const h=el.offsetHeight;
+    if(h<=0)return;                          /* 还没布局出来，下一轮再说 */
+    /* 列偏移在这里算，且只算一次 —— 不再由调用方传进来。
+       原先 syncAll 传的是列偏移、onSee 与 place 传的是 layoutTop(el,box)
+       （= colOff + el.offsetTop，已经累加过），sync() 里又加一次 offsetTop，
+       同一个面板于是被算出两个位置（实测 768 与 1510）：
+       一条路径说"露出来了"、另一条说"滑出去了"，面板反复揭出/收起 = 一直闪。
+       自己算，四条调用路径天然同一把尺子。 */
+    const box=document.querySelector(".stage__body");
+    let colOff=0;
+    if(box){let n=el.offsetParent;while(n&&n!==box){colOff+=n.offsetTop;n=n.offsetParent}}
+    const top=colOff+el.offsetTop;
+    /* 分母取 min(模块高, 可视区高)：比可视区还高的模块不会因为
+       「永远露不全」而被判成已滑出，从而反复触发 */
+    const denom=Math.min(h,vh);
+    const vis=Math.max(0,Math.min(top+h,st+vh)-Math.max(top,st));
+    const ratio=denom>0?vis/denom:0;
+    const shown=el.classList.contains("in");
+    if(!shown&&ratio>SHOW)materialize(el);
+    else if(shown&&ratio<HIDE)disperse(el);
+  }
+
+  function syncAll(){
+    if(!watched.size){pollOff();return}
+    const box=document.querySelector(".stage__body");
+    if(!box)return;
+    const st=box.scrollTop, vh=box.clientHeight;
+    watched.forEach(el=>{
+      if(!el.isConnected){watched.delete(el);return}   /* 切换模块后残留的旧节点 */
+      sync(el,st,vh);
+    });
+    if(!watched.size)pollOff();
+  }
+  /* 主路径用低频轮询，而不是只听 scroll 事件：
+     事件会跟渲染管线一起被节流、合并甚至延迟，进出判定不该被它拖住。 */
+  let poll=0;
+  function pollOn(){
+    if(poll||!watched.size)return;
+    poll=setInterval(syncAll,110);
+  }
+  function pollOff(){if(poll){clearInterval(poll);poll=0}}
+  /* 滚动时立刻补一次，手感更跟手。滚动期间容器 rect 会变，先失效缓存 */
+  document.addEventListener("scroll",()=>{boxRect=null;syncAll()},{passive:true,capture:true});
+  window.addEventListener("resize",()=>{boxRect=null},{passive:true});
+
+  function onSee(es){
+    const box=document.querySelector(".stage__body");
+    if(!box)return;
+    const st=box.scrollTop, vh=box.clientHeight;
+    es.forEach(en=>{
+      const el=en.target;
+      /* 模块一律走比例判定 —— 与轮询同一个函数，不再自己算位置传进去 */
+      if(isModule(el)){sync(el,st,vh);return}
+      if(!en.isIntersecting)return;
+      if(el.classList.contains("in"))return;
+      materialize(el);
+    });
+  }
+  /* 舞台内的元素以舞台为根，其余（顶栏/侧栏/信息条）必须用视口为根，
+     否则会被根的裁剪框挡掉、永远不相交 */
+  function watch(el){
+    if(off()){el.classList.add("in");return}
+    const box=document.querySelector(".stage__body");
+    const inside=!!(box&&box.contains(el));
+    if(isModule(el)&&inside){watched.add(el);pollOn()}
+    const key=inside?"in":"out";
+    if(!ios.has(key)){
+      ios.set(key,new IntersectionObserver(onSee,{
+        root:inside?box:null,
+        /* 阈值取在进 / 出判定线附近，两个方向都会回调 */
+        threshold:[0,HIDE,SHOW,.5], rootMargin:"0px 0px -50px 0px"
+      }));
+    }
+    ios.get(key).observe(el);
+  }
+  /* 已进入首屏的直接揭示。
+     先强制一次重排让 .rv 的起始样式生效，过渡才会跑 ——
+     不用 rAF：标签页在后台或被节流时 rAF 不触发，内容会一直不显示 */
+  function place(el){
+    const box=document.querySelector(".stage__body");
+    if(box&&isModule(el)&&box.contains(el)){
+      /* 与后续判定同一个函数（列偏移在 sync 内部算），刚放出来又被收回会闪一下 */
+      sync(el,box.scrollTop,box.clientHeight);
+    }else{
+      const r=el.getBoundingClientRect();
+      if(r.bottom>-40&&r.top<window.innerHeight+40&&r.right>-40&&r.left<window.innerWidth+40){
+        void el.offsetWidth;materialize(el);
+      }
+    }
+    watch(el);
+  }
+  function add(el,delay,fade){
+    if(!el||el.classList.contains("rv")||el.classList.contains("rv--fade"))return;
+    if(off())return;               /* 静态 / 减弱动效模式下完全不介入，内容始终可见 */
+    el.classList.add(fade?"rv--fade":"rv");
+    el.__d=delay||0;
+    /* 模块的时序交给粒子（setTimeout），只有非模块用 transition-delay */
+    if(!isModule(el))el.style.transitionDelay=(delay||0)+"ms";
+    armed?place(el):queue.push(el);
+  }
+  function addStatic(){
+    /* 侧栏在移动端是固定定位抽屉，只做淡入 */
+    [[".chrome",0],[".rail",80,true],[".stage__head",140],[".ticker",300],[".statusbar",340]]
+      .forEach(([sel,d,fade])=>{add(document.querySelector(sel),d,fade)});
+  }
+  /* 按"从上到下、从左到右"的阅读顺序给每个模块编号，依次重组。
+     切换模块时给旧内容的崩散留出起手时间，读起来才是先碎后组。 */
+  function addDynamic(tight){
+    const order=[];
+    document.querySelectorAll("#colMain > *").forEach(el=>{
+      if(el.classList.contains("statgrid"))order.push(...el.querySelectorAll(".stat"));
+      else order.push(el);
+    });
+    order.push(...document.querySelectorAll("#colSide > *"));
+    /* 严格按纵向位置排序：两列交错也保持「从上到下依次」的观感，
+       而不是主列全部走完才轮到侧栏。此刻还没加 .rv，读到的是自然位置。 */
+    order.sort((a,b)=>a.getBoundingClientRect().top-b.getBoundingClientRect().top);
+    const gap=(tight?52:64)*SLOW;
+    const base=(tight?60:0)*SLOW;
+    /* fade 必须传 false：传 true 会落到 .rv--fade（只有透明度），
+       面板就变成「框框直接淡入」，横向擦出那套完全不生效。
+       这个参数是粒子时代留下的（当时怕 transform 让碎片拼偏），粒子删掉后要改回来。 */
+    order.forEach((el,i)=>add(el,base+i*gap,false));
+  }
+  function arm(){
+    armed=true;
+    queue.forEach(place);queue.length=0;
+  }
+  /* 压住揭示，等转场黄块退场。时间一到不用手动触发 ——
+     watched 里的元素还在，110ms 的轮询会自己把它们放出来。 */
+  function hold(ms){ holdUntil=performance.now()+ms }
+  /* 先解除观察再重建，避免模块切换后残留已移除的节点 */
+  function reboot(){
+    ios.forEach(io=>io.disconnect());ios.clear();
+    watched.clear();pollOff();boxRect=null;
+  }
+
+  return {add,addStatic,addDynamic,arm,reboot,hold,get armed(){return armed}};
+})();
+
+/* ============================================================
+   7. 渲染主流程
+   ============================================================ */
+function render(){
+  /* 兜底：id 对不上就退回第一个条目。没有这一层的话，
+     findItem 失败会让 render 静默返回，整页空白却不报错。 */
+  const found=findItem(state.item)||findItem(SECTIONS[0].items[0].id);
+  if(!found)return;
+  const {sec,item}=found;
+  state.section=sec.id;
+
+  $("#crumbSec").textContent=`${sec.code} ${sec.en}`;
+  $("#crumbItem").textContent=`${item.code} ${item.name}`;
+  document.title=`${item.name} · Origin 官方网站`;
+
+  /* 水印：大写拉丁展示字压在内容之下（Latin as ornament，一页一处的原则） */
+  const wm=$("#watermark");
+  if(wm)wm.textContent="ORIGIN / OFFICIAL WEBSITE";   /* 固定短语，不再随板块变 */
+  /* 换页时的局部马赛克化：150ms 的网点爆闪，本体压在黄块底下，
+     尾巴正好赶上内容落位，读作「画面在解析」 */
+  const sb=$("#stageBody");
+  if(sb&&REVEAL.armed&&!QUIET&&!REDUCED){
+    clearTimeout(glitchTimer);
+    sb.classList.remove("is-glitching");
+    void sb.offsetWidth;
+    sb.classList.add("is-glitching");
+    glitchTimer=setTimeout(()=>sb.classList.remove("is-glitching"),170);
+  }
+
+  $("#colMain").classList.add("pre-rv");
+  $("#colSide").classList.add("pre-rv");
+  $("#colMain").innerHTML=heroHTML(item)+officialContentHTML(item);
+  $("#colSide").innerHTML=sideHTML(item);
+
+  /* 顺序很重要：所有会改动版式的操作必须先做完，再去量几何、起跑动画。
+     原先 addDynamic()（内部按 getBoundingClientRect().top 排序、分配级联延迟）
+     跑在 mountScans() 与版式切换之前 —— 动画已经按旧版式起跑，版式才变，
+     面板位置一挪就是顶部那两块「抽搐」一下。 */
+  mountScans();                                          /* 先插光影层 */
+  if(window.__mapToggleSync)window.__mapToggleSync();    /* 再定版式（可能改栏数） */
+  syncNav();
+  /* 滚动必须先归零，再量几何。
+     addDynamic() 按 getBoundingClientRect().top 这个「视口相对」坐标排序编排；
+     若此时还停在旧滚动位置，编排算的是旧位置的面板，
+     等外面把 scrollTop 归零、页面跳到顶部，顶部那两块就会用错位的延迟动一下 —— 抽搐。 */
+  {const b=$(".stage__body");if(b)b.scrollTop=0}
+  /* 版式与滚动都已定，现在量出来的几何才是最终值 */
+  REVEAL.reboot();
+  REVEAL.addDynamic(REVEAL.armed);
+  /* 编排已接管（首屏模块挂着 WAAPI fill:both）—— 这时同步放行。
+     放行瞬间 .rv 的计算值仍是终态，所以没有属性变化，也就不会生成朝隐藏方向的过渡。
+     早放行等于没放，晚放行（哪怕只晚一帧）都会重新生成那条过渡。 */
+  $("#colMain").classList.remove("pre-rv");
+  $("#colSide").classList.remove("pre-rv");
+  void $("#colMain").offsetWidth;
+
+  /* 静态 / 减弱动效模式不走揭示流程，直接落值 */
+  if(QUIET||REDUCED){
+    animateCounters($("#colMain"));
+    animateCounters($("#colSide"));
+    requestAnimationFrame(drawChart);
+  }
+}
+
+/* 切页转场：信号黄从左侧横向铺满内容区盖住旧内容，到位后换 DOM，
+   再向右退出。用的就是官网启动动画第 2 段「黄色横向铺满」那个动作 ——
+   不是「旧的消失 + 新的出现」，而是中间真的被一块黄盖过去。 */
+let txTimer=0,txTimer2=0,glitchTimer=0;
+function select(id){
+  state.item=id;
+  const tx=$("#wipe");
+  if(!tx||QUIET||REDUCED||!REVEAL.armed){
+    render();const b=$(".stage__body");if(b)b.scrollTop=0;return;
+  }
+  clearTimeout(txTimer);clearTimeout(txTimer2);
+  tx.classList.remove("is-on");
+  void tx.offsetWidth;
+  tx.classList.add("is-on");
+  /* 揭示卡在黄块「开始退场」的当刻（295ms 拐点，取 300ms）。
+     早了动画全在黄块底下跑完 —— 看着跟没动画一样；
+     晚了黄块已经掀开、内容还没进来 —— 会露出空白帧。
+     只有卡在这一刻，两头都不占：黄块扫过哪里，哪里的内容正好在落位。 */
+  REVEAL.hold(300);
+  /* 黄块 246ms 就满宽了，270ms 换内容正好在满宽保持段里，换早了等于没盖住 */
+  txTimer=setTimeout(()=>{
+    render();   /* 滚动归零已移进 render()，必须在量几何之前执行 */
+  },270);
+  txTimer2=setTimeout(()=>tx.classList.remove("is-on"),1100);
+}
+
+/* ============================================================
+   8. 顶栏 / 底栏 / 交互
+   ============================================================ */
+function clock(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  $("#clockT").textContent=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  $("#clockD").textContent=`${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} · UTC+8`;
+}
+
+/* 滚动信息条 */
+function buildTicker(){
+  const feed=[
+    "ORIGIN <b>OFFICIAL WEBSITE</b> · 等待补充",
+    "ABOUT <b>ORIGIN</b> · 等待补充",
+    "PROJECTS <b>ORIGIN OSS</b> · 等待补充",
+    "TECHNOLOGY <b>ROADMAP</b> · 等待补充",
+    "NEWS <b>LATEST</b> · 等待补充"
+  ];
+  const html=feed.map(t=>`<span>▸ ${t}</span>`).join("");
+  $("#ticker").innerHTML=html+html;
+}
+
+/* 侧栏折叠 / 移动端抽屉 */
+const rail=$("#rail"),backdrop=$("#backdrop"),railToggle=$("#railToggle");
+const mobileMQ=window.matchMedia("(max-width:900px)");
+const isMobile=()=>mobileMQ.matches;
+function setDrawer(open){
+  const on=Boolean(open&&isMobile());
+  rail.classList.toggle("is-open",on);
+  backdrop.classList.toggle("is-on",on);
+  backdrop.setAttribute("aria-hidden",String(!on));
+  railToggle.setAttribute("aria-expanded",String(on));
+  railToggle.setAttribute("aria-label",on?"关闭导航栏":"打开导航栏");
+  railToggle.setAttribute("title",on?"关闭导航栏":"打开导航栏");
+  document.documentElement.classList.toggle("drawer-open",on);
+}
+function closeDrawer(){setDrawer(false)}
+railToggle.addEventListener("click",()=>{
+  if(isMobile())setDrawer(!rail.classList.contains("is-open"));
+  else{
+    rail.classList.toggle("is-collapsed");
+    railToggle.setAttribute("aria-label",rail.classList.contains("is-collapsed")?"展开导航栏":"折叠导航栏");
+    railToggle.setAttribute("title",railToggle.getAttribute("aria-label"));
+    railToggle.setAttribute("aria-expanded",String(!rail.classList.contains("is-collapsed")));
+  }
+});
+backdrop.addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+
+/* 搜索 */
+const searchEl=$("#navSearch");
+let searchTimer=null;
+searchEl.addEventListener("input",()=>{
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>applyFilter(searchEl.value),110);
+});
+searchEl.addEventListener("keydown",e=>{
+  if(e.key!=="Enter")return;
+  const first=$(".nav__group:not([hidden]) .sub__item:not([hidden])",navEl);
+  if(first){select(first.dataset.item);searchEl.blur();closeDrawer()}
+});
+
+/* 快捷键：/ 聚焦搜索 */
+document.addEventListener("keydown",e=>{
+  if(e.key==="/"&&document.activeElement!==searchEl&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){
+    e.preventDefault();searchEl.focus();
+  }
+});
+
+/* 延迟读数轻微浮动，制造"活"的感觉 */
+setInterval(()=>{
+  const v=10+Math.round(Math.random()*6);
+  $("#sbLatency").textContent=`SYNC ${v}ms`;
+},3200);
+
+/* ============================================================
+   9. 启动序列 —— 自检日志 → 空网格 → 逐级揭示
+   ============================================================ */
+
+
+/* 给每块面板挂上光影层。放在 render() 之后统一补，
+   比在十来处模板里各写一遍可靠 —— 漏一处就少一块面板有光效。 */
+function mountScans(){
+  $$(".panel").forEach(p=>{
+    if(p.querySelector(":scope > .scan"))return;
+    const s=document.createElement("div");
+    s.className="scan";
+    p.insertBefore(s,p.firstChild);
+  });
+}
+/* 地图开关：开启时 body 带 map-focus，CSS 据此收掉三块次要面板，
+   版面由「八块并列」变成「地图 + 关键指标」——地图才真的成为主体。
+   放在地图下方：控件本身就是它控制的对象。 */
+function bindMapToggle(){
+  const sync=()=>{
+    const b=$("#mapToggle");
+    /* 必须先确认当前模块真的有地图 —— 只看 state.mapOpen 的话，
+       没有地图的板块也会被套上地图页排版（单栏、右栏掉到下方、收起三块面板）。
+       mapOpen 默认是 true，所以那五个板块此前一直被误伤。 */
+    const hasMap=!!document.querySelector(".panel--map");
+    document.body.classList.toggle("map-focus",hasMap&&!!state.mapOpen);
+    if(b){b.setAttribute("aria-pressed",String(!!state.mapOpen));const n=b.querySelector("b");if(n)n.textContent=state.mapOpen?"开":"关"}
+  };
+  document.addEventListener("click",e=>{
+    const b=e.target&&e.target.closest?e.target.closest("#mapToggle"):null;
+    if(!b)return;
+    state.mapOpen=!state.mapOpen;
+    sync();
+  });
+  sync();
+  window.__mapToggleSync=sync;   /* render 之后重新对齐（开关是重建的） */
+}
+/* 主视觉的黄色光影跟随鼠标：横向跟指针 X、纵向跟指针 Y，所以是斜着走的。
+   绑在 document 上用事件委托 —— hero 每次切页都会被 render() 重建，
+   直接绑在元素上就得每次重挂。光带中心对准指针，所以横纵各减半个宽/高。 */
+function bindHeroScan(){
+  let tx=null,ty=0,lastX=null,dx=0,cur=null,rect=null,bw=0;
+  const paint=(scan,op)=>{
+    scan.style.transform="translate("+tx.toFixed(1)+"px,"+ty.toFixed(1)+"px) skewX(-14deg)";
+    if(op!==undefined)scan.style.opacity=op;
+  };
+  document.addEventListener("mousemove",e=>{
+    const panel=e.target&&e.target.closest?e.target.closest(".panel"):null;
+    if(!panel)return;
+    const scan=panel.querySelector(":scope > .scan");
+    if(!scan)return;
+    /* 同一面板内只量一次矩形：每移动一像素就 getBoundingClientRect()
+       就是一次强制同步布局，13 块面板下会把滚动拖垮。
+       换面板或滚动时失效重算。 */
+    if(cur!==panel){cur=panel;rect=null;bw=0}
+    if(!rect){
+      rect=panel.getBoundingClientRect();
+      /* 带宽只在这里读一次。放进 mousemove 里读计算样式同样会触发样式重算。 */
+      bw=parseFloat(getComputedStyle(scan).width)||180;
+    }
+    const r=rect;
+    const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+    if(lastX!==null)dx=e.clientX-lastX;
+    lastX=e.clientX;
+    tx=x*r.width-bw/2;      /* 减半个实际带宽，光带中心才对准指针 */
+    ty=(y-.5)*r.height*.42;
+    scan.style.transition="transform 140ms linear,opacity 300ms cubic-bezier(.2,.8,.2,1)";
+    paint(scan,1);
+  },{passive:true});
+  /* 离开面板不是原地消失：顺着最后一次移动方向继续飘出去，同时缓慢淡掉。
+     relatedTarget 还在 hero 内就忽略 —— mouseout 每经过一个子元素都会冒泡一次。 */
+  document.addEventListener("mouseout",e=>{
+    const panel=e.target&&e.target.closest?e.target.closest(".panel"):null;
+    if(!panel||tx===null)return;
+    if(e.relatedTarget&&panel.contains(e.relatedTarget))return;
+    const scan=panel.querySelector(":scope > .scan");
+    if(!scan)return;
+    tx+=(dx>=0?1:-1)*150;
+    ty*=1.35;
+    scan.style.transition="transform 620ms cubic-bezier(.3,0,.3,1),opacity 620ms cubic-bezier(.3,0,.3,1)";
+    paint(scan,0);
+    lastX=null;
+  },{passive:true});
+}
+/* 点按进入：按下之后才放行黄轨加载。
+   键盘也接（Enter / 空格），并且只触发一次。 */
+function intro(){
+  const t=$("#tap");
+  if(!t||QUIET){ if(t)t.style.display="none"; boot(); return }
+  let fired=false;
+  const go=()=>{
+    if(fired)return;fired=true;
+    t.classList.add("is-done");
+    setTimeout(()=>{t.style.display="none"},700);
+    setTimeout(boot,200);        /* 等淡出起手，再让黄轨接上 */
+  };
+  t.addEventListener("click",go);
+  t.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" ")go() });
+  document.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" ")go() });
+}
+
+function boot(){
+  const el=$("#boot");
+  REVEAL.addStatic();
+  if(QUIET){el.classList.add("is-done");REVEAL.arm();return}
+
+  const rail=$("#bootRail"),flood=$("#bootFlood"),read=$("#bootRead"),
+        pct=$("#bootPct"),stat=$("#bootStat"),ticks=$("#bootTicks");
+
+  /* 刻度：沿黄轨排一列，每 5% 一根，整 25% 加长 */
+  let th="";
+  for(let i=0;i<=20;i++)th+=`<i class="${i%5===0?"major":"minor"}" style="top:${i*5}%"></i>`;
+  ticks.innerHTML=th;
+
+  const DUR=2400;                       /* 官网实测约 1.75s；这里放慢到 2.4s，黄轨走得从容些 */
+  const ease=p=>1-Math.pow(1-p,3);
+  const STAGES=[[0,"INITIALIZING"],[.24,"LOADING ORIGIN"],[.48,"MOUNTING SITE"],[.72,"SYNCING CONTENT"],[.9,"SITE READY"]];
+  let t0=null,si=-1,done=false;
+  /* 收尾只留这一条路：正常走完与 rAF 被节流时的兜底都从它出去。
+     之前兜底分支直接 display:none 就结束了，音频在那条路上永远不播
+     （无头环境、后台标签页都是走兜底）。 */
+  function finish(){
+    el.classList.add("is-done");
+    setTimeout(()=>{el.style.display="none"},700);
+    const sc=$("#labScan");
+    if(sc){sc.classList.add("is-boot");setTimeout(()=>sc.classList.remove("is-boot"),1800)}
+    setTimeout(()=>REVEAL.arm(),200);
+  }
+
+  function settle(){
+    if(done)return;done=true;
+    rail.style.height="100%";pct.textContent="100";stat.textContent="SITE READY";
+    read.style.top="calc(100% - 62px)";
+    /* 2) 黄轨横向铺满整屏 */
+    flood.style.transition="transform 520ms cubic-bezier(.4,0,.2,1)";
+    flood.style.transform="scaleX(1)";
+    setTimeout(()=>{
+      /* 3) 整屏淡出 —— 主界面从这一刻开始出现，音频也在这里起播 */
+      el.classList.add("is-done");
+      setTimeout(()=>{el.style.display="none"},700);
+        const sc=$("#labScan");
+      if(sc){sc.classList.add("is-boot");setTimeout(()=>sc.classList.remove("is-boot"),1800)}
+      setTimeout(()=>REVEAL.arm(),200);
+    },540);
+  }
+
+  function tick(now){
+    if(done)return;
+    if(t0===null)t0=now;
+    const p=Math.min(1,(now-t0)/DUR), e=ease(p);
+    rail.style.height=(e*100)+"%";
+    pct.textContent=String(Math.round(e*100));
+    /* 读数贴在填充端下方；接近底部时钳制，不让它滑出屏幕 */
+    read.style.top="min(calc("+(e*100).toFixed(2)+"% + 14px), calc(100% - 62px))";
+    const k=STAGES.findIndex(s=>e<s[0]);
+    const idx=k<0?STAGES.length-1:k;
+    if(idx!==si){si=idx;stat.textContent=STAGES[idx][1]}
+    if(p<1)requestAnimationFrame(tick); else settle();
+  }
+  requestAnimationFrame(tick);
+
+  /* 保险：rAF 被节流或后台标签页不触发时，别把整块黑遮罩留在页面上 */
+  setTimeout(()=>{
+    if(!done)finish();
+  },DUR+2600);
+}
+
+/* ============================================================
+   10. 启动
+   ============================================================ */
+buildNav();
+buildTicker();
+initMeters();
+syncNav();
+render();
+FX.ambient();          /* 背景微尘常驻，与界面构建无关 */
+clock();
+setInterval(clock,1000);
+intro();               /* 先停在「点按屏幕开始」，按了才进黄轨加载 */
+bindHeroScan();        /* 面板光影跟随鼠标 */
+bindMapToggle();       /* 地图开关 */
+function syncViewportMode(){
+  if(!isMobile()){
+    closeDrawer();
+    railToggle.setAttribute("aria-expanded",String(!rail.classList.contains("is-collapsed")));
+    railToggle.setAttribute("aria-label",rail.classList.contains("is-collapsed")?"展开导航栏":"折叠导航栏");
+  }else{
+    closeDrawer();
+    railToggle.setAttribute("aria-expanded","false");
+    railToggle.setAttribute("aria-label","打开导航栏");
+  }
+  railToggle.setAttribute("title",railToggle.getAttribute("aria-label"));
+}
+if(mobileMQ.addEventListener)mobileMQ.addEventListener("change",syncViewportMode);
+else if(mobileMQ.addListener)mobileMQ.addListener(syncViewportMode);
+window.addEventListener("orientationchange",closeDrawer);
+syncViewportMode();
+
+/* 滚轮下滑：主视觉刻度盘轻微视差，制造纵深 */
+(function(){
+  const box=document.querySelector(".stage__body");
+  if(!box||QUIET)return;
+  let queued=false;
+  box.addEventListener("scroll",()=>{
+    if(queued)return;
+    queued=true;
+    requestAnimationFrame(()=>{
+      queued=false;
+      const d=document.querySelector(".dial");
+      if(d)d.style.transform="translateY("+Math.min(box.scrollTop*.05,28).toFixed(1)+"px)";
+    });
+  },{passive:true});
+})();
+</script>
+</body>
+</html>
+
